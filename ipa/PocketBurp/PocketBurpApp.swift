@@ -68,6 +68,7 @@ final class RootViewController: UIViewController {
         webView = WKWebView(frame: .zero, configuration: config)
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.navigationDelegate = self
+        webView.uiDelegate = self
         webView.isOpaque = false
         webView.backgroundColor = kBG
         webView.scrollView.backgroundColor = kBG
@@ -162,9 +163,41 @@ final class RootViewController: UIViewController {
     }
 }
 
-// MARK: - WKNavigationDelegate
+// MARK: - WKNavigationDelegate & WKUIDelegate
 
-extension RootViewController: WKNavigationDelegate {
+extension RootViewController: WKNavigationDelegate, WKUIDelegate {
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if let url = navigationAction.request.url {
+            let path = url.path.lowercased()
+            if path.contains("/api/ca/") || path.hasSuffix(".mobileconfig") || path.hasSuffix(".crt") {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                decisionHandler(.cancel)
+                return
+            }
+            if navigationAction.targetFrame == nil {
+                webView.load(navigationAction.request)
+                decisionHandler(.cancel)
+                return
+            }
+        }
+        decisionHandler(.allow)
+    }
+
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
+                 for navigationAction: WKNavigationAction,
+                 windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if let url = navigationAction.request.url {
+            let path = url.path.lowercased()
+            if path.contains("/api/ca/") || path.hasSuffix(".mobileconfig") || path.hasSuffix(".crt") {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            } else {
+                webView.load(navigationAction.request)
+            }
+        }
+        return nil
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         offlineView.isHidden = true
         UIView.animate(withDuration: 0.25) { self.splash.alpha = 0 } completion: { _ in

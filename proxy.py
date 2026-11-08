@@ -30,7 +30,7 @@ CLIENT_TIMEOUT = 120
 UPSTREAM_TIMEOUT = 30
 
 LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "::1", "0.0.0.0")
-LOOPBACK_PORTS = (8080, 9090)
+LOOPBACK_PORTS = (8080,)
 
 
 # --------------------------------------------------------------------------
@@ -592,11 +592,10 @@ def _make_handler(engine):
                 except ValueError:
                     port = 443
 
-            if host.lower() in LOOPBACK_HOSTS and port in LOOPBACK_PORTS:
+            if host.lower() in LOOPBACK_HOSTS and port == engine.port:
                 self._send(sock, error_page(
                     502, "Proxy loop detected",
-                    "Safari asked the proxy to fetch PocketBurp's own GUI.\n"
-                    "Just open http://127.0.0.1:9090 directly."))
+                    "Request aimed at PocketBurp proxy itself (%s:%d)." % (host, port)))
                 return
             try:
                 ctx = ca.ssl_context_for_host(host)
@@ -645,10 +644,33 @@ def _make_handler(engine):
                     host, port, scheme = fixed_host, fixed_port or port, "https"
                     if not req.target.lower().startswith(("http://", "https://")):
                         path = req.target
-                if host.lower() in LOOPBACK_HOSTS and port in LOOPBACK_PORTS:
-                    self._send(sock, error_page(
-                        502, "Proxy loop detected",
-                        "Request aimed at PocketBurp itself (%s:%d)." % (host, port)))
+                if host.lower() in ("burp", "pocketburp") or (host.lower() in LOOPBACK_HOSTS and port == engine.port):
+                    if path in ("/cert", "/ca.crt", "/api/ca/download", "/api/ca/mobileconfig"):
+                        self._send(sock, (
+                            "HTTP/1.1 302 Found\r\n"
+                            "Location: http://127.0.0.1:9090/api/ca/mobileconfig\r\n"
+                            "Connection: close\r\n\r\n").encode("ascii"))
+                        return
+                    page = (
+                        "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>"
+                        "<title>PocketBurp</title><style>"
+                        "body{background:#1e1e1e;color:#eee;font-family:-apple-system,sans-serif;padding:30px 20px;text-align:center}"
+                        "a{display:block;background:#ff6633;color:#fff;padding:14px;border-radius:10px;text-decoration:none;font-weight:bold;margin:14px auto;max-width:320px}"
+                        ".btn2{background:#333;color:#ccc}"
+                        "</style></head><body>"
+                        "<h2>PocketBurp Proxy Active</h2>"
+                        "<p style='color:#aaa;font-size:14px'>Listening on port 8080 (GUI on 9090)</p>"
+                        "<a href='http://127.0.0.1:9090/api/ca/mobileconfig'>Install CA Certificate (.mobileconfig)</a>"
+                        "<a class='btn2' href='http://127.0.0.1:9090/'>Open PocketBurp Web GUI</a>"
+                        "</body></html>"
+                    ).encode("utf-8")
+                    resp = (
+                        "HTTP/1.1 200 OK\r\n"
+                        "Content-Type: text/html; charset=utf-8\r\n"
+                        "Content-Length: %d\r\n"
+                        "Connection: close\r\n\r\n" % len(page)
+                    ).encode("ascii") + page
+                    self._send(sock, resp)
                     return
 
                 headers = list(req.headers)

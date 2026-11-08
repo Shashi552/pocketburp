@@ -67,15 +67,49 @@ def ensure_ca():
     with _lock:
         if os.path.exists(CA_KEY) and os.path.exists(CA_CRT):
             return CA_CRT, CA_KEY
-        _run([
-            "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-sha256",
-            "-days", str(CA_DAYS),
-            "-keyout", CA_KEY,
-            "-out", CA_CRT,
-            "-subj", "/C=IN/O=PocketBurp/OU=Security Research/CN=PocketBurp Root CA",
-            "-addext", "basicConstraints=critical,CA:TRUE,pathlen:0",
-            "-addext", "keyUsage=critical,keyCertSign,cRLSign,digitalSignature",
-        ])
+        cnf_path = os.path.join(CERT_DIR, "ca_gen.cnf")
+        with open(cnf_path, "w") as fh:
+            fh.write(
+                "[req]\n"
+                "distinguished_name = req_distinguished_name\n"
+                "x509_extensions = v3_ca\n"
+                "prompt = no\n\n"
+                "[req_distinguished_name]\n"
+                "C = IN\n"
+                "O = PocketBurp\n"
+                "OU = Security Research\n"
+                "CN = PocketBurp Root CA\n\n"
+                "[v3_ca]\n"
+                "basicConstraints = critical,CA:TRUE,pathlen:0\n"
+                "keyUsage = critical,keyCertSign,cRLSign,digitalSignature\n"
+                "subjectKeyIdentifier = hash\n"
+                "authorityKeyIdentifier = keyid:always,issuer\n"
+            )
+        try:
+            try:
+                _run([
+                    "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-sha256",
+                    "-days", str(CA_DAYS),
+                    "-keyout", CA_KEY,
+                    "-out", CA_CRT,
+                    "-config", cnf_path,
+                ])
+            except CAError:
+                # Fallback for OpenSSL 1.1.1+ if -config fails
+                _run([
+                    "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-sha256",
+                    "-days", str(CA_DAYS),
+                    "-keyout", CA_KEY,
+                    "-out", CA_CRT,
+                    "-subj", "/C=IN/O=PocketBurp/OU=Security Research/CN=PocketBurp Root CA",
+                    "-addext", "basicConstraints=critical,CA:TRUE,pathlen:0",
+                    "-addext", "keyUsage=critical,keyCertSign,cRLSign,digitalSignature",
+                ])
+        finally:
+            try:
+                os.remove(cnf_path)
+            except OSError:
+                pass
         try:
             os.chmod(CA_KEY, 0o600)
         except OSError:

@@ -56,6 +56,9 @@ class ApiHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, *")
         extra_lower = {k.lower() for k in (extra or {})}
         if "cache-control" not in extra_lower:
             self.send_header("Cache-Control", "no-store")
@@ -353,14 +356,69 @@ class ApiHandler(BaseHTTPRequestHandler):
             info = ca.ca_info()
             return self._send_bytes((info.get("pem") or "").encode(),
                                     "text/plain; charset=utf-8")
-        if path == "/api/ca/download" and method == "GET":
+        if path in ("/api/ca/download", "/api/ca/mobileconfig", "/api/ca/profile.mobileconfig") and method == "GET":
+            # If explicit crt requested via ?file=1 or ?crt=1 or ?format=crt
+            if query.get("file") or query.get("crt") or (query.get("format") or [""])[0] == "crt":
+                ca.ensure_ca()
+                with open(ca.CA_CRT, "rb") as fh:
+                    data = fh.read()
+                return self._send_bytes(
+                    data, "application/x-x509-ca-cert",
+                    extra={"Content-Disposition": 'attachment; filename="pocketburp-ca.crt"'})
+
+            # Default: Apple Configuration Profile (.mobileconfig) for direct one-tap iOS installation
+            ca.ensure_ca()
+            with open(ca.CA_CRT, "rb") as fh:
+                pem_str = fh.read().decode("ascii", "replace")
+            import ssl, base64, uuid
+            der_bytes = ssl.PEM_cert_to_DER_cert(pem_str)
+            b64_der = base64.b64encode(der_bytes).decode("ascii")
+            p_uuid = str(uuid.uuid4()).upper()
+            c_uuid = str(uuid.uuid4()).upper()
+            mobileconfig = (
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" "
+                "\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+                "<plist version=\"1.0\">\n<dict>\n"
+                "    <key>PayloadContent</key>\n    <array>\n        <dict>\n"
+                "            <key>PayloadCertificateFileName</key>\n"
+                "            <string>pocketburp-ca.crt</string>\n"
+                "            <key>PayloadContent</key>\n"
+                "            <data>" + b64_der + "</data>\n"
+                "            <key>PayloadDescription</key>\n"
+                "            <string>PocketBurp Root CA</string>\n"
+                "            <key>PayloadDisplayName</key>\n"
+                "            <string>PocketBurp Root CA</string>\n"
+                "            <key>PayloadIdentifier</key>\n"
+                "            <string>com.shashank.pocketburp.rootca</string>\n"
+                "            <key>PayloadType</key>\n"
+                "            <string>com.apple.security.root</string>\n"
+                "            <key>PayloadUUID</key>\n"
+                "            <string>" + c_uuid + "</string>\n"
+                "            <key>PayloadVersion</key>\n            <integer>1</integer>\n"
+                "        </dict>\n    </array>\n"
+                "    <key>PayloadDisplayName</key>\n"
+                "    <string>PocketBurp CA Profile</string>\n"
+                "    <key>PayloadIdentifier</key>\n"
+                "    <string>com.shashank.pocketburp.profile</string>\n"
+                "    <key>PayloadRemovalDisallowed</key>\n    <false/>\n"
+                "    <key>PayloadType</key>\n    <string>Configuration</string>\n"
+                "    <key>PayloadUUID</key>\n"
+                "    <string>" + p_uuid + "</string>\n"
+                "    <key>PayloadVersion</key>\n    <integer>1</integer>\n"
+                "</dict>\n</plist>"
+            ).encode("utf-8")
+            return self._send_bytes(
+                mobileconfig, "application/x-apple-aspen-config",
+                extra={"Content-Disposition": 'inline; filename="pocketburp.mobileconfig"'})
+        if path == "/api/ca/cert.crt" and method == "GET":
             ca.ensure_ca()
             with open(ca.CA_CRT, "rb") as fh:
                 data = fh.read()
             return self._send_bytes(
                 data, "application/x-x509-ca-cert",
-                extra={"Content-Disposition":
-                       'attachment; filename="pocketburp-ca.crt"'})
+                extra={"Content-Disposition": 'attachment; filename="pocketburp-ca.crt"'})
+
 
         return self._err("unknown endpoint %s" % path, 404)
 

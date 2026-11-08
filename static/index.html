@@ -755,7 +755,12 @@ tr.row-flagreflected td{background:rgba(68,147,248,.07)}
     <dl class="kv" id="caInfo">
       <dt>Subject</dt><dd>loading…</dd>
     </dl>
-    <a class="btn btn-orange btn-block" id="btnDownloadCa" href="/api/ca/download" download="pocketburp-ca.crt">Download CA Certificate</a>
+    <a class="btn btn-orange btn-block" id="btnDownloadCa" href="/api/ca/download">Install CA Certificate (Profile)</a>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <a class="btn btn-secondary" style="flex:1;text-align:center;padding:10px 4px;font-size:12px;background:#333;color:#eee;border-radius:8px;text-decoration:none" href="/api/ca/mobileconfig">.mobileconfig</a>
+      <a class="btn btn-secondary" style="flex:1;text-align:center;padding:10px 4px;font-size:12px;background:#333;color:#eee;border-radius:8px;text-decoration:none" href="/api/ca/download?file=1" download="pocketburp-ca.crt">.crt file</a>
+      <button class="btn btn-secondary" style="flex:1;text-align:center;padding:10px 4px;font-size:12px;background:#333;color:#eee;border-radius:8px;border:none;cursor:pointer" id="btnCopyPem" type="button">Copy PEM</button>
+    </div>
   </div>
 
   <div class="panel-block">
@@ -1715,13 +1720,28 @@ async function loadCa() {
     ];
     $("caInfo").innerHTML = rows.map((r) =>
       "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>").join("");
-    $("btnDownloadCa").setAttribute("href", "/api/ca/download");
+    $("btnDownloadCa").setAttribute("href", "/api/ca/mobileconfig");
   } catch (e) {
     if (!S.offline) {
       $("caInfo").innerHTML = "<dt>Status</dt><dd>backend unreachable — start run.sh</dd>";
     }
   }
 }
+
+$("btnCopyPem")?.addEventListener("click", async () => {
+  try {
+    const res = await fetch("/api/ca/pem");
+    const txt = await res.text();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(txt);
+      toast("CA PEM copied to clipboard", "ok");
+    } else {
+      prompt("Copy CA Certificate PEM:", txt);
+    }
+  } catch (e) {
+    toast("Copy failed: " + e.message, "err");
+  }
+});
 
 /* --------------------------------------------------------------- polling */
 async function pollOnce() {

@@ -62,7 +62,9 @@ class InterceptQueue(object):
         if not self.enabled:
             return False
         host = (meta.get("host") or "").lower()
-        path = (meta.get("path") or "").lower()
+        port = meta.get("port") or 80
+        if host in ("127.0.0.1", "localhost", "::1", "0.0.0.0") or port in (8080, 9090):
+            return False
         if host in NOISE_HOSTS:
             return False
         if self.auto_skip_static:
