@@ -1,8 +1,64 @@
-# PocketBurp
+<p align="center">
+  <img src="static/icons/icon-512.png" alt="PocketBurp Logo" width="110" style="border-radius: 22px;">
+</p>
 
-A mobile, **GUI-first** intercepting HTTP/HTTPS proxy for iPhone — a pixel-faithful
-replica of the Burp Suite workflow (Dashboard · Intercept · History · Repeater ·
-Scanner · Scope · CA) that runs **entirely on the phone**, no PC required.
+<h1 align="center">PocketBurp</h1>
+
+<p align="center">
+  <b>A mobile, GUI-first intercepting HTTP/HTTPS proxy for iPhone</b><br>
+  <i>A pixel-faithful replica of the Burp Suite Community Edition workflow running on iOS.</i>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Shashi552/pocketburp/actions/workflows/build-ipa.yml"><img src="https://github.com/Shashi552/pocketburp/actions/workflows/build-ipa.yml/badge.svg" alt="Build Status"></a>
+  <img src="https://img.shields.io/badge/iOS-15.0%2B-orange?logo=apple" alt="iOS 15.0+">
+  <img src="https://img.shields.io/badge/arch-arm64-blue" alt="arm64">
+  <img src="https://img.shields.io/badge/Python-3.7%2B%20stdlib-green?logo=python" alt="Python 3.7+">
+  <img src="https://img.shields.io/badge/Dependencies-Zero-brightgreen" alt="Zero Dependencies">
+  <img src="https://img.shields.io/badge/License-MIT-purple" alt="License MIT">
+</p>
+
+---
+
+<p align="center">
+  <img src="docs/hero-banner.jpg" alt="PocketBurp Hero Banner" width="100%" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+</p>
+
+---
+
+## ⚡ Overview
+
+PocketBurp brings the core desktop web application security testing toolkit onto your iPhone:
+- **Intercept**: Real-time HTTP/HTTPS request holding, header tampering, and body editing.
+- **HTTP History**: Full searchable exchange log with status color-coding, request/response syntax viewer, and timing.
+- **Repeater**: Craft, tweak, and replay requests on the fly with sub-millisecond response inspection.
+- **Vulnerability Scanner**: Active fuzzing for Path Traversal / LFI, SQLi probes, Reflected XSS, and Open Redirects.
+- **Root CA Installer**: One-tap Apple Configuration Profile (`.mobileconfig`) generation for native iOS TLS trust.
+
+<p align="center">
+  <img src="docs/features-showcase.jpg" alt="PocketBurp Feature Showcase" width="100%" style="border-radius: 12px;">
+</p>
+
+---
+
+## 🏗 Architecture
+
+```mermaid
+flowchart LR
+    subgraph iPhone["iPhone / iOS Device"]
+        Safari["Mobile Safari / Apps"]
+        Shell["PocketBurp.app (Native Shell)"]
+        subgraph Engine["iSH / Python Proxy Engine"]
+            Proxy["proxy.py (Port 8080)<br>MITM TLS Interception"]
+            API["api.py (Port 9090)<br>REST Backend + Web GUI"]
+        end
+    end
+    Target["Target Web Servers (HTTPS)"]
+
+    Safari -->|"Wi-Fi Proxy (127.0.0.1:8080)"| Proxy
+    Shell -->|"WebKit GUI (127.0.0.1:9090)"| API
+    Proxy -->|"Inspect / Forward"| Target
+```
 
 ```
  Python backend (iSH Shell / Alpine)          Safari frontend
@@ -42,7 +98,7 @@ You should see:
   proxy      : 0.0.0.0:8080  (listening on 0.0.0.0:8080)
   GUI        : http://127.0.0.1:9090
   CA cert    : ready (EE:0D:21:56:5A:79:EF:00)
-  intercept  : ON (holding traffic)
+  intercept  : OFF
 ```
 
 Open **Safari → `http://127.0.0.1:9090`**. That is the whole GUI.
