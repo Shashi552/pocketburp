@@ -318,7 +318,7 @@ GET  /api/ca/info | /api/ca/pem | /api/ca/download
 | `ipa/SIGNING-AND-INSTALL.md` | Mac setup, signing, the four install routes, troubleshooting | — |
 | `ipa/tools/check_pbxproj.py` | dependency-free project validator (brace balance, dangling UUIDs, missing files); runs anywhere, including here | `project.pbxproj` |
 | `ipa/build-ipa.sh` | older CI-style packager, still used by the GitHub Actions workflow | Xcode |
-| `.github/workflows/build-ipa.yml` | unsigned `.ipa` build on `macos-14` for people with no Mac | `build-ipa.sh` |
+| `.github/workflows/build-ipa.yml` | unsigned `.ipa` build on `macos-15` for people with no Mac | `build-ipa.sh` |
 | `db/history.db` | SQLite database (created automatically) | `history.py` |
 | `certs/` | CA + per-host certificates | `ca.py` |
 
@@ -381,6 +381,29 @@ iPhone app ──► :8080 handler ──► scope check ──► intercept que
   both the key and the installed profile when you are done.
 * `--reset` and *Clear history* destroy captured traffic permanently; the DB is
   plain SQLite at `db/history.db`.
+
+---
+
+## 💡 The iSH Background Reality & Open for Suggestions
+
+### The Mobile Background Challenge
+iOS aggressively suspends or terminates background applications after 30–60 seconds to preserve battery life and system memory. Because iSH is an emulated x86 user-space environment running inside an iOS sandbox, keeping the proxy alive in the background presents a fundamental mobile OS challenge:
+- **Location Keepalive (`/dev/location`)**: Reading `/dev/location` forces iOS CoreLocation to treat iSH as an active navigation/tracking app, preventing process suspension. While this allows standalone on-device usage without a PC, continuous location polling naturally increases battery usage over prolonged sessions.
+- **The PC / Mac LAN Alternative**: Running `python3 pocketburp.py --host 0.0.0.0` on your computer on the same Wi-Fi network and pointing your iPhone's Wi-Fi proxy to it completely eliminates phone battery drain, avoids iOS background limits, and runs at native hardware speeds.
+
+### 🤝 Open for Suggestions & Contributions!
+PocketBurp is an evolving mobile security research experiment, and **we are completely open for suggestions, ideas, and community feedback!**
+
+We would love your thoughts on:
+1. **Background Keepalive Optimizations**: Lighter methods to keep the engine awake in iOS (e.g. low-frequency audio session vs. CoreLocation).
+2. **Native Embedded Engine**: Integrating a lightweight native Swift / C proxy daemon directly into `PocketBurp.app` to eliminate the need for a separate iSH app.
+3. **Network Extension / VPN Integration**: Exploring `NEPacketTunnelProvider` or WireGuard-style local TUN capture for transparent system-wide routing without manual Wi-Fi proxy configuration.
+4. **UI & Feature Improvements**: New vulnerability scanner payloads, UI ergonomics, or packet filtering rules.
+
+If you have ideas, feedback, or want to contribute:
+- 💡 [**Open a GitHub Discussion**](https://github.com/Shashi552/pocketburp/discussions)
+- 🐛 [**Submit an Issue or Suggestion**](https://github.com/Shashi552/pocketburp/issues)
+- 🚀 [**Submit a Pull Request**](https://github.com/Shashi552/pocketburp/pulls)
 
 ---
 
