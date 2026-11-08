@@ -31,6 +31,14 @@ PY
 # ------------------------------------------------------------------- workspace
 mkdir -p db certs/hosts static
 
+# Ensure iSH has working DNS nameservers
+if [ -f /etc/resolv.conf ]; then
+  if ! grep -q "nameserver" /etc/resolv.conf 2>/dev/null; then
+    echo "nameserver 1.1.1.1" >> /etc/resolv.conf 2>/dev/null || true
+    echo "nameserver 8.8.8.8" >> /etc/resolv.conf 2>/dev/null || true
+  fi
+fi
+
 # Free the ports if a previous run left something behind (best effort).
 for port in "$GUI_PORT" "$PROXY_PORT"; do
   if command -v ss >/dev/null 2>&1 && ss -ltn 2>/dev/null | grep -q ":$port "; then

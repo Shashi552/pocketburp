@@ -46,7 +46,7 @@ class InterceptQueue(object):
         self._held = {}            # id -> HeldRequest
         self._order = []           # ids, oldest first
         self._next_id = 1
-        self.enabled = True
+        self.enabled = False
         self.auto_skip_static = True
         self.stats = {
             "held_total": 0,

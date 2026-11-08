@@ -498,6 +498,16 @@ class ProxyEngine(object):
                 req_headers="\r\n".join(meta["headers"]), req_body=meta["body"],
                 status=0, time_ms=result.get("time_ms", 0), in_scope=in_scope,
                 note=(note + " | " if note else "") + result["error"])
+            err_body = (
+                "<!doctype html><meta name=viewport content='width=device-width'>"
+                "<body style='background:#1e1e1e;color:#ddd;font-family:-apple-system,sans-serif;padding:24px'>"
+                "<h2 style='color:#ff6633'>PocketBurp</h2>"
+                "<h3>502 Bad Gateway</h3>"
+                "<p>Failed to connect to <b>%s:%s</b></p>"
+                "<pre style='background:#2a2a2a;padding:12px;border-radius:8px;color:#ff7b72'>%s</pre>"
+                "</body>" % (meta.get("host", ""), meta.get("port", ""), result.get("error", "Unknown error"))
+            ).encode("utf-8")
+            send_back(502, ["Content-Type: text/html; charset=utf-8"], err_body)
             return False, result["error"]
 
         self.stats["forwarded"] += 1
