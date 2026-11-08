@@ -60,15 +60,15 @@ jobs:
 
           # --- files that must exist ---------------------------------------
           for f in PocketBurp Info.plist \
-                   pocketburp/pocketburp.py \
-                   pocketburp/api.py \
-                   pocketburp/static/index.html \
-                   pocketburp/static/manifest.webmanifest \
-                   pocketburp/static/sw.js; do
+                   engine/pocketburp.py \
+                   engine/api.py \
+                   engine/static/index.html \
+                   engine/static/manifest.webmanifest \
+                   engine/static/sw.js; do
             test -f "$APP/$f" && echo "  PASS  $f" || { echo "::error::missing $f"; exit 1; }
           done
 
-          COUNT=$(find "$APP/pocketburp" -type f | wc -l | tr -d ' ')
+          COUNT=$(find "$APP/engine" -type f | wc -l | tr -d ' ')
           echo "  engine files bundled: $COUNT"
           test "$COUNT" -ge 20 || { echo "::error::engine staging incomplete ($COUNT files)"; exit 1; }
 

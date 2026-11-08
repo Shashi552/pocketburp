@@ -106,17 +106,17 @@ fi
 
 # ------------------------------------------------------------------ stage engine
 step "1/5  staging the Python engine + GUI into the app bundle"
-rm -rf "$APP_NAME/pocketburp"
-mkdir -p "$APP_NAME/pocketburp/static"
+rm -rf "$APP_NAME/engine"
+mkdir -p "$APP_NAME/engine/static"
 for f in ca.py history.py scope.py intercept.py proxy.py repeater.py scanner.py \
          api.py pocketburp.py run.sh README.md config.json; do
-  [ -f "$ENGINE_DIR/$f" ] && cp "$ENGINE_DIR/$f" "$APP_NAME/pocketburp/" \
+  [ -f "$ENGINE_DIR/$f" ] && cp "$ENGINE_DIR/$f" "$APP_NAME/engine/" \
     || warn "missing $f (skipped)"
 done
 # every static asset: index.html, manifest, service worker, icon set
-cp -R "$ENGINE_DIR/static/." "$APP_NAME/pocketburp/static/" 2>/dev/null \
+cp -R "$ENGINE_DIR/static/." "$APP_NAME/engine/static/" 2>/dev/null \
   || die "cannot copy static/ -- run this from the ipa/ folder inside the project"
-ok "$(find "$APP_NAME/pocketburp" -type f | wc -l | tr -d ' ') files staged"
+ok "$(find "$APP_NAME/engine" -type f | wc -l | tr -d ' ') files staged"
 
 # ------------------------------------------------------------------ build
 step "2/5  building (Release, iphoneos arm64)"

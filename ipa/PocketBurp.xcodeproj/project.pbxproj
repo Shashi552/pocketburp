@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* PocketBurpApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* PocketBurpApp.swift */; };
 		A10000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* Assets.xcassets */; };
-		A10000000000000000000017 /* pocketburp in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* pocketburp */; };
+		A10000000000000000000017 /* engine in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* engine */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -17,7 +17,7 @@
 		A10000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000000000000000000005 /* PocketBurp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketBurp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A10000000000000000000016 /* pocketburp */ = {isa = PBXFileReference; lastKnownFileType = folder; path = pocketburp; sourceTree = "<group>"; };
+		A10000000000000000000016 /* engine */ = {isa = PBXFileReference; lastKnownFileType = folder; path = engine; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,7 +45,7 @@
 				A10000000000000000000002 /* PocketBurpApp.swift */,
 				A10000000000000000000004 /* Assets.xcassets */,
 				A10000000000000000000006 /* Info.plist */,
-				A10000000000000000000016 /* pocketburp */,
+				A10000000000000000000016 /* engine */,
 			);
 			path = PocketBurp;
 			sourceTree = "<group>";
@@ -117,7 +117,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000003 /* Assets.xcassets in Resources */,
-				A10000000000000000000017 /* pocketburp in Resources */,
+				A10000000000000000000017 /* engine in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

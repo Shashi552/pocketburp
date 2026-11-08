@@ -87,7 +87,7 @@ def main():
         "AppIcon asset catalog name": "ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon" in text,
         "Info.plist path": "INFOPLIST_FILE = PocketBurp/Info.plist" in text,
         "bundle id": "PRODUCT_BUNDLE_IDENTIFIER = com.shashank.pocketburp" in text,
-        "engine folder in Resources": "pocketburp in Resources" in raw,
+        "engine folder in Resources": "engine in Resources" in raw,
     }
     for label, ok in cheap_checks.items():
         if not ok:

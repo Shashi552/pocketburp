@@ -38,25 +38,25 @@ if [ ! -f "$ENGINE_DIR/proxy.py" ]; then
   exit 1
 fi
 
-rm -rf "PocketBurp/pocketburp"          # never ship a stale or partial engine
-mkdir -p "PocketBurp/pocketburp"
+rm -rf "PocketBurp/engine"          # never ship a stale or partial engine
+mkdir -p "PocketBurp/engine"
 
 for f in ca.py history.py scope.py intercept.py proxy.py repeater.py scanner.py \
          api.py pocketburp.py run.sh README.md config.json; do
   [ -f "$ENGINE_DIR/$f" ] || { echo "  ✗ missing engine file: $f" >&2; exit 1; }
-  cp "$ENGINE_DIR/$f" "PocketBurp/pocketburp/"
+  cp "$ENGINE_DIR/$f" "PocketBurp/engine/"
 done
 
 # EVERY static asset -- index.html, manifest, service worker, the whole icon set.
 # Copying only index.html here silently shipped an app with no PWA manifest,
 # no service worker and no icons; that regression is what this block prevents.
-cp -R "$ENGINE_DIR/static/." "PocketBurp/pocketburp/static/" || {
+cp -R "$ENGINE_DIR/static/." "PocketBurp/engine/static/" || {
   echo "  ✗ cannot copy static/ from $ENGINE_DIR" >&2; exit 1; }
 
-STAGED=$(find "PocketBurp/pocketburp" -type f | wc -l | tr -d " ")
+STAGED=$(find "PocketBurp/engine" -type f | wc -l | tr -d " ")
 for required in pocketburp.py api.py static/index.html \
                 static/manifest.webmanifest static/sw.js; do
-  [ -f "PocketBurp/pocketburp/$required" ] || {
+  [ -f "PocketBurp/engine/$required" ] || {
     echo "  ✗ staging incomplete: $required not staged" >&2; exit 1; }
 done
 if [ "$STAGED" -lt 20 ]; then

@@ -1,6 +1,6 @@
 # build output
 ipa/build/
-ipa/PocketBurp/pocketburp/
+ipa/PocketBurp/engine/
 # runtime state created by the engine
 db/
 certs/

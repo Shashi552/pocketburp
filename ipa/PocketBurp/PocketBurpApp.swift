@@ -397,7 +397,7 @@ final class EngineBridge {
     /// Documents/pocketburp, where the embedded Alpine can execute it.
     func seedProjectIfNeeded() {
         let fm = FileManager.default
-        guard let src = Bundle.main.url(forResource: "pocketburp", withExtension: nil),
+        guard let src = Bundle.main.url(forResource: "engine", withExtension: nil),
               let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         let dst = docs.appendingPathComponent("pocketburp")
         guard !fm.fileExists(atPath: dst.path) else { return }
