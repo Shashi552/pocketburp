@@ -63,9 +63,13 @@ class InterceptQueue(object):
             return False
         host = (meta.get("host") or "").lower()
         port = meta.get("port") or 80
+        path = (meta.get("path") or "").lower()
         if host in ("127.0.0.1", "localhost", "::1", "0.0.0.0") or port in (8080, 9090):
             return False
-        if host in NOISE_HOSTS:
+        if any(host == n or host.endswith("." + n) for n in (
+            "apple.com", "icloud.com", "mzstatic.com", "aaplimg.com",
+            "crashlytics.com", "akadns.net"
+        )):
             return False
         if self.auto_skip_static:
             clean_path = path.split("?", 1)[0]

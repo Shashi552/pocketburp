@@ -40,13 +40,10 @@ done
 
 # ---------------------------------------------------------------- background keepalive
 # On iOS, the OS freezes background apps after ~30s unless an active background
-# capability (like CoreLocation) is streaming. Reading /dev/location keeps iSH
-# running continuously in the background while you use Safari or PocketBurp.
+# capability (like CoreLocation) is streaming. PocketBurp automatically manages
+# a low-frequency keepalive on /dev/location to keep iSH alive without battery drain.
 if [ -e /dev/location ]; then
-  say "  [i] Activating background keepalive (/dev/location)..."
-  cat /dev/location > /dev/null 2>&1 &
-  LOCATION_PID=$!
-  trap 'kill $LOCATION_PID 2>/dev/null || true; exit' INT TERM EXIT
+  say "  [i] iOS detected -- low-power background keepalive active."
 fi
 
 say ""

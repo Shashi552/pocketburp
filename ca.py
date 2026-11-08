@@ -150,13 +150,14 @@ def cert_for_host(host):
     ensure_ca()
     with _lock:
         crt = os.path.join(HOST_DIR, _safe_name(host) + ".crt")
-        key = os.path.join(HOST_DIR, _safe_name(host) + ".key")
-        if os.path.exists(crt) and os.path.exists(key) and _leaf_is_usable(crt):
+        key = os.path.join(CERT_DIR, "leaf.key")
+        if not os.path.exists(key):
+            _run(["genrsa", "-out", key, "2048"])
+        if os.path.exists(crt) and _leaf_is_usable(crt):
             return crt, key
 
         csr = os.path.join(HOST_DIR, _safe_name(host) + ".csr")
         ext = os.path.join(HOST_DIR, _safe_name(host) + ".ext")
-        _run(["genrsa", "-out", key, "2048"])
         _run([
             "req", "-new", "-sha256", "-key", key, "-out", csr,
             "-subj", "/C=IN/O=PocketBurp/CN=%s" % host,

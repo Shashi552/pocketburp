@@ -107,14 +107,17 @@ def seed_demo():
 
 def _start_ish_keepalive():
     """On iOS (iSH Shell), reading /dev/location keeps iOS CoreLocation active,
-    preventing iOS from freezing or suspending the process when backgrounded."""
+    preventing iOS from freezing or suspending the process when backgrounded.
+    Sleeping 5s between reads avoids 100% CPU usage and prevents battery drain."""
     if os.path.exists("/dev/location"):
         def _loop():
             try:
                 with open("/dev/location", "rb") as fh:
                     while True:
-                        if not fh.read(64):
+                        data = fh.read(64)
+                        if not data:
                             break
+                        time.sleep(5)
             except Exception:
                 pass
         t = threading.Thread(target=_loop, name="ish-keepalive", daemon=True)
