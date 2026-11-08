@@ -10,6 +10,13 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Shashi552/pocketburp/watchers"><img src="https://img.shields.io/github/watchers/Shashi552/pocketburp?style=for-the-badge&logo=github&color=ff6633&label=WATCHERS" alt="Watchers"></a>
+  <a href="https://github.com/Shashi552/pocketburp/stargazers"><img src="https://img.shields.io/github/stars/Shashi552/pocketburp?style=for-the-badge&logo=github&color=orange&label=STARS" alt="Stars"></a>
+  <a href="https://github.com/Shashi552/pocketburp/network/members"><img src="https://img.shields.io/github/forks/Shashi552/pocketburp?style=for-the-badge&logo=github&color=blue&label=FORKS" alt="Forks"></a>
+  <a href="https://github.com/Shashi552/pocketburp"><img src="https://komarev.com/ghpvc/?username=Shashi552-pocketburp&label=PROJECT+VIEWS&color=ff6633&style=for-the-badge" alt="Project Views"></a>
+</p>
+
+<p align="center">
   <a href="https://github.com/Shashi552/pocketburp/actions/workflows/build-ipa.yml"><img src="https://github.com/Shashi552/pocketburp/actions/workflows/build-ipa.yml/badge.svg" alt="Build Status"></a>
   <img src="https://img.shields.io/badge/iOS-15.0%2B-orange?logo=apple" alt="iOS 15.0+">
   <img src="https://img.shields.io/badge/arch-arm64-blue" alt="arm64">
@@ -401,6 +408,7 @@ We would love your thoughts on:
 4. **UI & Feature Improvements**: New vulnerability scanner payloads, UI ergonomics, or packet filtering rules.
 
 If you have ideas, feedback, or want to contribute:
+- 👀 [**View Project Watchers**](https://github.com/Shashi552/pocketburp/watchers) or watch the repository to track developments
 - 💡 [**Open a GitHub Discussion**](https://github.com/Shashi552/pocketburp/discussions)
 - 🐛 [**Submit an Issue or Suggestion**](https://github.com/Shashi552/pocketburp/issues)
 - 🚀 [**Submit a Pull Request**](https://github.com/Shashi552/pocketburp/pulls)
