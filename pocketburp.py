@@ -105,7 +105,24 @@ def seed_demo():
     return len(samples)
 
 
+def _start_ish_keepalive():
+    """On iOS (iSH Shell), reading /dev/location keeps iOS CoreLocation active,
+    preventing iOS from freezing or suspending the process when backgrounded."""
+    if os.path.exists("/dev/location"):
+        def _loop():
+            try:
+                with open("/dev/location", "rb") as fh:
+                    while True:
+                        if not fh.read(64):
+                            break
+            except Exception:
+                pass
+        t = threading.Thread(target=_loop, name="ish-keepalive", daemon=True)
+        t.start()
+
+
 def main(argv=None):
+    _start_ish_keepalive()
     parser = argparse.ArgumentParser(description="PocketBurp -- mobile Burp Suite replica")
     parser.add_argument("--host", default="127.0.0.1",
                         help="GUI bind address (default 127.0.0.1 = this device only)")
