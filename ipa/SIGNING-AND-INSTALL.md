@@ -107,6 +107,39 @@ Agent-driven, end to end: **`ipa/ANTIGRAVITY-CI-PROMPT.md`**.
 
 ---
 
+## 2b. Moving the engine into iSH Shell (sandbox crossing)
+
+The `.ipa` bundles the Python source code inside `PocketBurp.app`'s sandbox. However, **iSH is a separate iOS app with its own sandboxed filesystem and cannot read another app's bundle.** Therefore, `cd ~/pocketburp` will not exist inside iSH until you transfer the engine files into iSH's sandbox.
+
+We package a clean standalone engine zip: **`pocketburp-engine-for-iSH.zip`** (contains the frozen engine and static assets; no keys, no databases, no caches).
+
+### Step-by-step transfer sequence:
+
+1. **Move `pocketburp-engine-for-iSH.zip` to the iPhone**:
+   - AirDrop `pocketburp-engine-for-iSH.zip` to your iPhone, or save it to iCloud Drive.
+   - In the iOS **Files** app, tap `pocketburp-engine-for-iSH.zip` to extract the `pocketburp/` folder.
+
+2. **Mount the folder in iSH**:
+   Open **iSH Shell** and run:
+   ```sh
+   apk update && apk add python3 openssl
+   mount -t ios . /mnt
+   ```
+   A native iOS document picker sheet opens. Select the extracted `pocketburp` folder.
+
+3. **Copy the engine into iSH home directory**:
+   ```sh
+   cp -R /mnt/pocketburp ~/pocketburp
+   cd ~/pocketburp
+   sh run.sh
+   ```
+
+4. **Launch PocketBurp**:
+   - Leave iSH running in the background.
+   - Open PocketBurp. If you see the recovery card ("Engine not running"), tap **Retry** once the iSH engine reports listening on ports 8080 and 9090.
+
+---
+
 ## 3. What the app does on first launch
 
 | Situation | Behaviour |

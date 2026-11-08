@@ -137,6 +137,12 @@ iSH (or in an embedded Alpine once you add the iSH xcframework —
 `EngineBridge.seedProjectIfNeeded()` already copies the Python project into the
 app's Documents folder on first launch).
 
+> **Important (Sandbox crossing)**: iOS isolates each app into its own sandbox; iSH
+> cannot access PocketBurp's app bundle directly. To get the engine into iSH,
+> transfer `pocketburp-engine-for-iSH.zip` via Files/AirDrop and mount it in iSH.
+> See detailed instructions in **[`ipa/SIGNING-AND-INSTALL.md §2b`](ipa/SIGNING-AND-INSTALL.md#2b-moving-the-engine-into-ish-shell-sandbox-crossing)**.
+
+
 ## 3. Point the iPhone at the proxy
 
 **Settings → Wi-Fi → (your network) → Configure Proxy → Manual**
