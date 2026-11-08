@@ -1,0 +1,1896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Installable-app metadata: Home Screen icon, splash, standalone chrome -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PocketBurp">
+<meta name="application-name" content="PocketBurp">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#1e1e1e">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="167x167" href="/static/icons/icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/static/icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/static/icons/icon-120.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
+<!-- iOS launch images (dark, so the splash matches the app) -->
+<link rel="apple-touch-startup-image" href="/static/icons/icon-1024.png">
+<title>PocketBurp — Mobile Intercepting Proxy</title>
+<style>
+/* ============================================================
+   PocketBurp UI — self contained. No external fonts, images or CSS.
+   Burp Suite palette: #1e1e1e / #2d2d2d / #ff6633
+   ============================================================ */
+:root{
+  --bg:#1e1e1e; --bg-deep:#181818; --panel:#2d2d2d; --panel-2:#262626;
+  --panel-3:#343434; --line:#414141; --line-soft:#383838;
+  --text:#e8e8e8; --muted:#9c9c9c; --dim:#757575;
+  --orange:#ff6633; --orange-2:#d2531f; --orange-soft:rgba(255,102,51,.14);
+  --green:#3fb950; --green-2:#2ea043; --green-soft:rgba(63,185,80,.16);
+  --red:#e5534b; --red-2:#b93c35; --red-soft:rgba(229,83,75,.16);
+  --yellow:#d29922; --blue:#4493f8; --purple:#a371f7;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --r:8px; --r-sm:6px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--ui);
+  font-size:14px; line-height:1.45; overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:calc(30px + var(--safe-b));
+}
+h1,h2,h3,h4{margin:0;font-weight:600}
+button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--orange);text-decoration:none}
+.hidden{display:none !important}
+.muted{color:var(--muted)}
+.dim{color:var(--dim)}
+.mono{font-family:var(--mono)}
+
+/* ---------------------------------------------------- top bar */
+html[data-display="standalone"] #topbar{padding-top:calc(10px + env(safe-area-inset-top,0px))}
+#topbar{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; gap:8px;
+  padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;
+  background:linear-gradient(180deg,#252525,#1e1e1e);
+  border-bottom:1px solid #000;
+}
+.brand{display:flex;align-items:center;gap:8px;min-width:0}
+.brand-mark{
+  width:26px;height:26px;border-radius:7px;flex:0 0 auto;
+  background:linear-gradient(145deg,var(--orange),#b33d13);
+  display:grid;place-items:center;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset;
+}
+.brand-mark svg{width:15px;height:15px;display:block}
+.brand-name{font-weight:700;letter-spacing:.2px;font-size:15px}
+.brand-name b{color:var(--orange)}
+.brand-sub{font-size:10px;color:var(--dim);letter-spacing:.6px;text-transform:uppercase;line-height:1}
+.top-spacer{flex:1}
+.top-pill{
+  display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:20px;
+  background:#191919;border:1px solid var(--line);font-size:11px;color:var(--muted);
+  white-space:nowrap;
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:0 0 auto;transition:background .2s}
+.dot.on{background:var(--green);box-shadow:0 0 8px rgba(63,185,80,.8)}
+.dot.off{background:var(--red)}
+.dot.warn{background:var(--yellow)}
+.top-toggle{
+  padding:6px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;
+  border:1px solid var(--line);background:#1a1a1a;color:var(--muted);white-space:nowrap;
+}
+.top-toggle.on{background:var(--green-soft);border-color:rgba(63,185,80,.5);color:#7ee787}
+
+/* ---------------------------------------------------- tabs */
+#tabs{
+  position:sticky; top:calc(43px + env(safe-area-inset-top,0px)); z-index:35;
+  display:flex; gap:2px; overflow-x:auto; scrollbar-width:none;
+  background:#1a1a1a; border-bottom:1px solid #000; padding:0 4px;
+}
+#tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto; padding:11px 12px 10px; font-size:12.5px; color:var(--muted);
+  border-top:2px solid transparent; white-space:nowrap; position:relative;
+  display:flex;align-items:center;gap:6px;
+}
+.tab.active{color:#fff;background:var(--panel);border-top-color:var(--orange);font-weight:600}
+.tab .count{
+  min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--red);
+  color:#fff;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;
+}
+.tab .count.show{display:flex}
+.tab .count.grey{background:#4a4a4a}
+
+/* ---------------------------------------------------- layout */
+main{padding:10px;max-width:1180px;margin:0 auto}
+.tab-panel{display:none;animation:fade .16s ease}
+.tab-panel.active{display:block}
+@keyframes fade{from{opacity:.4;transform:translateY(2px)}to{opacity:1;transform:none}}
+.panel-block{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+  margin-bottom:10px; overflow:hidden;
+}
+.block-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px; border-bottom:1px solid var(--line-soft); background:#313131;
+}
+.block-head h3{font-size:12px;letter-spacing:.7px;text-transform:uppercase;color:#cfcfcf}
+.block-body{padding:12px}
+
+/* ---------------------------------------------------- buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;
+  background:var(--panel-3);border:1px solid var(--line);color:var(--text);
+  min-height:38px;transition:filter .12s,transform .05s;
+}
+.btn:active{transform:scale(.985);filter:brightness(1.12)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn-orange{background:linear-gradient(180deg,#ff7a4d,#e85a28);border-color:#ff8a63;color:#1a1a1a;text-shadow:none;font-weight:800}
+.btn-green{background:linear-gradient(180deg,#3fb950,#2b7f38);border-color:#4cc95f;color:#06120a}
+.btn-red{background:linear-gradient(180deg,#e5534b,#b93c35);border-color:#f0716a;color:#fff}
+.btn-ghost{background:#262626;color:#ddd}
+.btn-sm{padding:6px 10px;min-height:30px;font-size:12px;border-radius:5px}
+.btn-block{display:flex;width:100%}
+.btn-icon{
+  width:30px;height:30px;border-radius:5px;display:grid;place-items:center;background:#3a3a3a;
+  border:1px solid var(--line);font-size:11px;font-weight:700;color:#ddd;flex:0 0 auto;
+}
+.btn-icon.rep{color:#ffb08c}
+.btn-icon.scn{color:#8fc7ff}
+
+/* ---------------------------------------------------- dashboard */
+.hero{
+  background:linear-gradient(160deg,#2f2f2f,#262626 60%);
+  border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px;
+}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.hero-label{font-size:10px;letter-spacing:1.1px;color:var(--dim);text-transform:uppercase}
+.hero-state{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:800;letter-spacing:.4px;margin-top:2px}
+.hero-addr{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:1px}
+.hero-actions{display:flex;gap:6px;flex:0 0 auto}
+.intercept-big{
+  width:100%;border-radius:10px;padding:14px 16px;text-align:left;
+  border:1px solid #444;display:flex;flex-direction:column;gap:1px;
+  background:linear-gradient(135deg,#3a2422,#2a1d1c);transition:all .18s;
+}
+.intercept-big.on{
+  background:linear-gradient(135deg,#1f6f36,#16512a);border-color:#38a552;
+  box-shadow:0 0 22px rgba(63,185,80,.18);
+}
+.intercept-big .ib-title{font-size:10.5px;letter-spacing:2px;color:rgba(255,255,255,.62);font-weight:700}
+.intercept-big .ib-state{font-size:25px;font-weight:900;letter-spacing:1px;line-height:1.15;color:#ff9d86}
+.intercept-big.on .ib-state{color:#8ef2a1}
+.intercept-big .ib-sub{font-size:11.5px;color:rgba(255,255,255,.55)}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.tile{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px 12px;min-width:0;
+}
+.tile .k{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .v{font-size:21px;font-weight:800;font-family:var(--mono);margin-top:1px;line-height:1.2}
+.tile.orange .v{color:var(--orange)} .tile.green .v{color:#67d47a}
+.tile.red .v{color:#ff7b72} .tile.blue .v{color:#79b8ff}
+.live-log{display:flex;flex-direction:column}
+.live-row{
+  display:grid;grid-template-columns:52px minmax(0,1fr) 46px;gap:8px;align-items:center;
+  padding:8px 12px;border-bottom:1px solid var(--line-soft);font-size:12px;
+}
+.live-row:last-child{border-bottom:0}
+.live-row:active{background:#333}
+.live-host{font-family:var(--mono);color:#d7d7d7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live-host .p{color:var(--muted)}
+.live-status{font-family:var(--mono);font-size:11.5px;text-align:right}
+.empty{
+  padding:26px 16px;text-align:center;color:var(--dim);font-size:12.5px;line-height:1.6;
+}
+.empty .big{font-size:15px;color:var(--muted);margin-bottom:4px}
+
+/* method chips + status colours */
+.m{font-family:var(--mono);font-size:10.5px;font-weight:800;letter-spacing:.3px;padding:2px 5px;border-radius:4px;background:#3a3a3a;color:#ddd;display:inline-block;text-align:center;min-width:44px}
+.m.GET{background:#1f3d5c;color:#9fd0ff}
+.m.POST{background:#1e4630;color:#9be7b6}
+.m.PUT{background:#4a3a16;color:#ffd28a}
+.m.DELETE{background:#4d2320;color:#ff9f97}
+.m.PATCH{background:#3b2a4d;color:#d5b3ff}
+.m.HEAD,.m.OPTIONS{background:#333;color:#bbb}
+.s2{color:#67d47a}.s3{color:#e3b341}.s4{color:#79b8ff}.s5{color:#ff7b72}.s0{color:#8b8b8b}
+
+/* ---------------------------------------------------- intercept tab */
+.tool-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.badge{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;
+  background:#3a3a3a;color:#ddd;font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;
+}
+.badge.red{background:var(--red-soft);color:#ff9d96;border:1px solid rgba(229,83,75,.45)}
+.badge.green{background:var(--green-soft);color:#7ee787;border:1px solid rgba(63,185,80,.45)}
+.badge.orange{background:var(--orange-soft);color:#ffab8a;border:1px solid rgba(255,102,51,.4)}
+.badge.blue{background:rgba(68,147,248,.14);color:#9ecbff;border:1px solid rgba(68,147,248,.4)}
+.queue-list{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.queue-list::-webkit-scrollbar{display:none}
+.qchip{
+  flex:0 0 auto;padding:7px 10px;border-radius:6px;background:#333;border:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:#ccc;max-width:230px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+}
+.qchip.active{background:var(--orange-soft);border-color:var(--orange);color:#ffcbb8}
+.qchip b{color:var(--orange)}
+.editor{
+  width:100%;min-height:230px;background:#141414;color:#dcdcdc;border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:10px;font-family:var(--mono);font-size:12px;line-height:1.5;
+  resize:vertical;tab-size:2;white-space:pre;overflow:auto;-webkit-user-select:text;user-select:text;
+}
+.editor:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 2px rgba(255,102,51,.18)}
+.editor.dirty{border-color:var(--yellow)}
+.intercept-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.intercept-actions .btn{min-height:46px;font-size:14px}
+.intercept-actions .wide{grid-column:1 / -1}
+.dirty-hint{font-size:11px;color:var(--yellow);margin:6px 2px 0;min-height:14px}
+.banner{
+  display:flex;align-items:center;gap:8px;justify-content:space-between;
+  background:var(--orange-soft);border:1px solid rgba(255,102,51,.45);border-radius:var(--r-sm);
+  padding:8px 10px;font-size:12px;color:#ffbd9f;margin-bottom:8px;
+}
+
+/* ---------------------------------------------------- history */
+.filters{display:grid;grid-template-columns:1fr;gap:8px}
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+input[type=text],input[type=search],select,textarea{
+  background:#1b1b1b;color:var(--text);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:9px 10px;font-family:inherit;font-size:13px;width:100%;-webkit-appearance:none;appearance:none;
+}
+select{background-image:linear-gradient(45deg,transparent 50%,#999 50%),linear-gradient(135deg,#999 50%,transparent 50%);background-position:calc(100% - 16px) 55%,calc(100% - 11px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:28px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange)}
+.tbl-wrap{overflow:hidden}
+table.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.w-id{width:26px}.w-m{width:64px}.w-s{width:50px}.w-l{width:60px}.w-t{width:46px}.w-a{width:42px}
+table.tbl tbody td.w-host,table.tbl thead th.w-host{padding-left:6px;padding-right:2px}
+.row-acts{display:flex;gap:2px;justify-content:flex-end}
+.row-acts button{
+  width:20px;height:22px;border-radius:3px;background:#3d3d3d;
+  font-size:9.5px;font-weight:800;color:#cfcfcf;display:grid;place-items:center;padding:0;
+}
+.row-acts button.r{color:#ffb08c;background:#43332b}
+.row-acts button.s{color:#9cc9f5;background:#2c3947}
+.row-acts button:active{filter:brightness(1.6)}
+table.tbl tbody td{padding:8px 6px}
+.col-len{display:none}
+.tbl .m{min-width:0;max-width:100%;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+table.tbl thead th{
+  position:sticky;top:0;background:#333;color:#c9c9c9;font-size:9.5px;letter-spacing:.2px;
+  text-transform:uppercase;font-weight:700;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);
+  white-space:nowrap;cursor:pointer;user-select:none;
+}
+table.tbl thead th .arrow{color:var(--orange);font-size:9px;margin-left:2px}
+table.tbl tbody td{padding:8px;border-bottom:1px solid #333;vertical-align:top}
+table.tbl tbody tr:active{background:#383838}
+table.tbl tbody tr.sel{background:var(--orange-soft)}
+.num{font-family:var(--mono);color:var(--dim);font-size:11px}
+.host-cell{min-width:0;overflow:hidden;max-width:0}
+.host-cell .h{font-family:var(--mono);font-size:11.5px;color:#e2e2e2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.host-cell .p{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-actions{display:flex;gap:4px;justify-content:flex-end}
+.col-time{display:table-cell}
+@media(min-width:430px){
+  .col-len{display:table-cell}
+  .w-id{width:34px}.w-m{width:74px}.w-s{width:56px}.w-a{width:48px}
+  table.tbl thead th{font-size:10px;letter-spacing:.3px}
+  .row-acts button{width:22px;height:24px}
+}
+@media(min-width:560px){
+  .filters{grid-template-columns:1fr 150px 150px}
+  .filter-row{grid-template-columns:1fr 1fr}
+}
+
+/* ---------------------------------------------------- detail sheet */
+.sheet{
+  position:fixed;inset:0;z-index:80;background:var(--bg-deep);display:flex;flex-direction:column;
+  animation:slideUp .18s ease;
+}
+@keyframes slideUp{from{transform:translateY(16px);opacity:.5}to{transform:none;opacity:1}}
+.sheet-head{
+  display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;
+  background:#242424;border-bottom:1px solid #000;flex:0 0 auto;
+}
+.sheet-title{min-width:0;flex:1}
+.sheet-title .t1{font-family:var(--mono);font-size:12px;color:#e6e6e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet-title .t2{font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet-body{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.split{display:flex;flex-direction:column;min-height:0;flex:1}
+.pane{display:flex;flex-direction:column;min-height:0;flex:1;border-bottom:1px solid var(--line)}
+.pane:last-child{border-bottom:0}
+.pane-h{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:6px 10px;background:#2a2a2a;border-bottom:1px solid var(--line-soft);
+  font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:#b9b9b9;flex:0 0 auto;
+}
+.pane-h .hint{text-transform:none;letter-spacing:0;color:var(--dim);font-size:10px}
+.pane-body{flex:1;min-height:0;overflow:auto;background:#141414}
+.pane textarea.editor{border:0;border-radius:0;min-height:100%;height:100%;resize:none;flex:1}
+.pane textarea.editor:focus{box-shadow:none}
+.sheet-foot{
+  display:flex;gap:8px;padding:8px 10px calc(8px + var(--safe-b));
+  background:#242424;border-top:1px solid #000;flex:0 0 auto;overflow-x:auto;
+}
+.sheet-foot .btn{flex:1 1 0;min-width:0;font-size:11.5px;padding:8px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet-foot{overflow:visible}
+@media(min-width:900px){
+  .sheet{inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);width:min(1100px,94vw);height:86vh;border-radius:12px;border:1px solid var(--line);box-shadow:0 24px 80px rgba(0,0,0,.6)}
+  .split{flex-direction:row}
+  .pane{border-bottom:0;border-right:1px solid var(--line)}
+  .pane:last-child{border-right:0}
+}
+
+/* response viewer */
+.resp-view{background:#141414;padding:8px 10px;font-family:var(--mono);font-size:11.5px;line-height:1.5;overflow:auto;height:100%;-webkit-user-select:text;user-select:text}
+.statusline{color:#8ef2a1;font-weight:700;margin-bottom:6px;word-break:break-all}
+.statusline.bad{color:#ff9d96}
+.hdrs{white-space:pre-wrap;word-break:break-word;margin:0 0 10px;color:#c8c8c8}
+.hdrs .hh{color:#ff9d7a}
+.hdrs .hv{color:#cfcfcf}
+.bodypre{white-space:pre-wrap;word-break:break-word;margin:0;color:#d6d6d6}
+.bodypre .jk{color:#ffa37a}.bodypre .js{color:#a5d6a7}
+.bodypre .jn{color:#79b8ff}.bodypre .jb{color:#d2a8ff}.bodypre .jnul{color:#8b949e}
+.bodypre .hp{color:#ff9d7a}.bodypre .ha{color:#d2a8ff}.bodypre .hs{color:#a5d6a7}.bodypre .hc{color:#6a737d;font-style:italic}
+.bodypre .hx{color:#8b949e}
+.trunc{color:var(--yellow);font-size:10.5px;padding:4px 0}
+
+/* ---------------------------------------------------- repeater */
+.split-2{display:flex;flex-direction:column;gap:10px}
+.pane-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.pane-box .pane-h{background:#313131}
+.pane-box textarea.editor{border:0;border-radius:0;min-height:220px}
+.pane-box .resp-view{min-height:180px;max-height:44vh}
+@media(min-width:900px){
+  .split-2{flex-direction:row}
+  .pane-box{flex:1 1 50%}
+  .pane-box .resp-view{max-height:60vh}
+}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:10px}
+.chip{
+  padding:6px 9px;border-radius:6px;background:#333;border:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:#ccc;max-width:100%;
+}
+.chip:active{background:#3d3d3d}
+.chip b{color:var(--orange)}
+.chip .st{color:#67d47a}
+
+/* ---------------------------------------------------- scanner */
+.field{margin-bottom:10px}
+.field > label{display:block;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.points{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.check{
+  display:flex;align-items:center;gap:8px;background:#262626;border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:9px 10px;font-size:12.5px;color:#ddd;
+}
+.check input{width:16px;height:16px;accent-color:var(--orange);margin:0}
+.progress{height:6px;background:#1b1b1b;border-radius:4px;overflow:hidden;margin:10px 0 6px;border:1px solid var(--line)}
+.progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--orange),#ffb08c);transition:width .3s}
+.summary{display:flex;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--muted)}
+.scan-tbl td{font-size:11.5px;padding:7px 6px}
+.scan-tbl th:nth-child(1){width:auto}
+.scan-tbl th:nth-child(2){width:66px}
+.scan-tbl th:nth-child(3){width:32px}
+.scan-tbl th:nth-child(4){width:52px}
+.scan-tbl th:nth-child(5){width:74px;}
+.scan-tbl .flagpill{font-size:9px;padding:1px 4px;letter-spacing:.2px}
+.payload-cell{font-family:var(--mono);font-size:11px;word-break:break-all;white-space:normal}
+.flagpill{display:inline-block;padding:1px 5px;border-radius:4px;font-size:9.5px;font-weight:700;letter-spacing:.3px;margin:1px 2px 1px 0;text-transform:uppercase}
+.flagpill.fp-err{background:rgba(229,83,75,.2);color:#ff8e86}
+.flagpill.fp-warn{background:rgba(210,153,34,.18);color:#e3b341}
+.flagpill.fp-ok{background:rgba(63,185,80,.16);color:#7ee787}
+tr.row-flag5xx td{background:rgba(229,83,75,.08)}
+tr.row-flaglength td{background:rgba(210,153,34,.06)}
+tr.row-flagreflected td{background:rgba(68,147,248,.07)}
+
+/* ---------------------------------------------------- scope / ca */
+.switch-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:11px 12px;border-top:1px solid var(--line-soft);background:#2a2a2a;
+}
+.switch-row .lbl{font-size:13px}
+.switch-row .sub{font-size:11px;color:var(--dim);margin-top:1px}
+.switch{position:relative;display:inline-block;width:48px;height:28px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.slider{position:absolute;inset:0;background:#4a4a4a;border-radius:28px;transition:.2s}
+.slider:before{content:"";position:absolute;height:22px;width:22px;left:3px;top:3px;background:#e6e6e6;border-radius:50%;transition:.2s}
+.switch input:checked + .slider{background:var(--green-2)}
+.switch input:checked + .slider:before{transform:translateX(20px)}
+.ca-card{background:linear-gradient(160deg,#2f2f2f,#262626);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;text-align:center}
+.ca-shield{width:58px;height:58px;margin:0 auto 8px;display:grid;place-items:center;border-radius:16px;background:var(--orange-soft);border:1px solid rgba(255,102,51,.4)}
+.ca-card h2{font-size:16px}
+.ca-card .sub{font-size:11.5px;color:var(--muted);margin-bottom:12px}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;text-align:left;font-size:11.5px;margin:0 0 14px}
+.kv dt{color:var(--dim);white-space:nowrap}
+.kv dd{margin:0;font-family:var(--mono);word-break:break-all;color:#dcdcdc;font-size:11px}
+.steps{margin:0;padding-left:20px;font-size:12.5px;line-height:1.75;color:#d3d3d3}
+.steps li{margin-bottom:6px}
+.steps code{font-family:var(--mono);background:#191919;border:1px solid var(--line);border-radius:4px;padding:1px 4px;font-size:11px;color:#ffb08c}
+.warn{
+  display:flex;gap:8px;background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.4);
+  border-radius:var(--r-sm);padding:10px;font-size:12px;color:#e6c07a;line-height:1.55
+}
+.note{font-size:11.5px;color:var(--dim);line-height:1.6}
+
+/* ---------------------------------------------------- status bar + toast */
+#statusbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  display:flex;align-items:center;gap:10px;padding:6px 10px calc(6px + var(--safe-b));
+  background:#181818;border-top:1px solid #000;font-size:10.5px;color:var(--muted);
+  font-family:var(--mono);white-space:nowrap;overflow-x:auto;scrollbar-width:none;
+}
+#statusbar::-webkit-scrollbar{display:none}
+#statusbar .sep{color:#444}
+#statusbar b{color:#cfcfcf;font-weight:600}
+#toast{
+  position:fixed;left:50%;bottom:calc(46px + var(--safe-b));transform:translate(-50%,14px);
+  background:#333;border:1px solid var(--line);color:#fff;padding:9px 16px;border-radius:22px;
+  font-size:12.5px;z-index:95;opacity:0;pointer-events:none;transition:all .22s;
+  box-shadow:0 8px 26px rgba(0,0,0,.5);max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.err{border-color:rgba(229,83,75,.6);color:#ffb1aa}
+#toast.ok{border-color:rgba(63,185,80,.6);color:#a5e8af}
+#installhint{
+  display:none; align-items:center; gap:8px; justify-content:space-between;
+  background:linear-gradient(180deg,#2f2718,#241f14);
+  border-bottom:1px solid rgba(255,102,51,.35);
+  padding:8px 12px; font-size:11.5px; color:#e8d9b8;
+}
+#installhint.show{display:flex}
+#installhint b{color:#ffb08c}
+#installhint .ih-x{
+  flex:0 0 auto;width:22px;height:22px;border-radius:11px;background:#3a3428;
+  color:#cbbfa4;font-size:13px;line-height:1;display:grid;place-items:center;
+}
+#installhint .ih-txt{min-width:0}
+#offline{
+  display:none;background:rgba(210,153,34,.12);border-bottom:1px solid rgba(210,153,34,.35);
+  color:#e6c07a;font-size:11px;padding:6px 12px;text-align:center;
+}
+#offline.show{display:block}
+@media(max-width:420px){
+  .brand-sub{display:none}
+  .tile .v{font-size:19px}
+  input,select,textarea{font-size:16px}  /* stop iOS auto-zoom */
+  .editor,.editor:focus{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+        <path d="M4 7h16M4 12h10M4 17h13"/>
+      </svg>
+    </span>
+    <span class="brand-name">Pocket<b>Burp</b></span>
+    <span class="brand-sub">intercepting proxy</span>
+  </div>
+  <div class="top-spacer"></div>
+  <button class="top-toggle" id="topIntercept" title="Toggle intercept">INTERCEPT</button>
+  <div class="top-pill"><span class="dot" id="topDot"></span><span id="topState">connecting</span></div>
+</header>
+
+<nav id="tabs">
+  <button class="tab active" data-tab="dashboard">Dashboard</button>
+  <button class="tab" data-tab="intercept">Intercept <span class="count" id="tabBadgeIntercept">0</span></button>
+  <button class="tab" data-tab="history">HTTP History</button>
+  <button class="tab" data-tab="repeater">Repeater</button>
+  <button class="tab" data-tab="scanner">Scanner</button>
+  <button class="tab" data-tab="scope">Scope</button>
+  <button class="tab" data-tab="ca">CA Certificate</button>
+</nav>
+
+<div id="installhint" role="status">
+  <span class="ih-txt">Install as an app: <b>Share → Add to Home Screen</b> — fullscreen, own icon.</span>
+  <button class="ih-x" id="installHintClose" aria-label="Dismiss">✕</button>
+</div>
+
+<div id="offline">Preview mode — the Python backend is not reachable, showing sample data. Start <b>sh run.sh</b> on the device.</div>
+
+<main>
+
+<!-- ============================================================ DASHBOARD -->
+<section class="tab-panel active" id="tab-dashboard">
+  <div class="hero">
+    <div class="hero-row">
+      <div style="min-width:0">
+        <div class="hero-label">Proxy status</div>
+        <div class="hero-state"><span class="dot" id="dashDot"></span><span id="dashState">STOPPED</span></div>
+        <div class="hero-addr" id="dashAddr">0.0.0.0:8080</div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-green btn-sm" id="btnProxyStart">Start</button>
+        <button class="btn btn-ghost btn-sm" id="btnProxyStop">Stop</button>
+      </div>
+    </div>
+    <button class="intercept-big" id="btnIntercept">
+      <span class="ib-title">INTERCEPT</span>
+      <span class="ib-state" id="ibState">OFF</span>
+      <span class="ib-sub" id="ibSub">Traffic passes straight through</span>
+    </button>
+  </div>
+
+  <div class="tiles">
+    <div class="tile orange"><div class="k">Intercepted</div><div class="v" id="tIntercepted">0</div></div>
+    <div class="tile green"><div class="k">Forwarded</div><div class="v" id="tForwarded">0</div></div>
+    <div class="tile red"><div class="k">Dropped</div><div class="v" id="tDropped">0</div></div>
+    <div class="tile blue"><div class="k">Held now</div><div class="v" id="tHeld">0</div></div>
+    <div class="tile"><div class="k">History rows</div><div class="v" id="tHistory">0</div></div>
+    <div class="tile red"><div class="k">Errors</div><div class="v" id="tErrors">0</div></div>
+  </div>
+
+  <div class="panel-block">
+    <div class="block-head"><h3>Live traffic — last 5</h3><button class="btn btn-sm btn-ghost" data-goto="history">View all</button></div>
+    <div class="live-log" id="liveLog"><div class="empty">No traffic yet.</div></div>
+  </div>
+
+  <div class="panel-block">
+    <div class="block-head"><h3>Quick setup</h3></div>
+    <div class="block-body">
+      <ol class="steps">
+        <li>Wi-Fi → your network → <b>Configure Proxy → Manual</b><br>Server <code>127.0.0.1</code> Port <code>8080</code></li>
+        <li>Install the CA from the <b>CA Certificate</b> tab (required for HTTPS).</li>
+        <li>Toggle <b>Intercept ON</b> above, then browse / launch the app under test.</li>
+        <li>Held requests appear in the <b>Intercept</b> tab — edit, then Forward or Drop.</li>
+      </ol>
+      <p class="note" style="margin-top:10px">PocketBurp only proxies at the application layer (no root, no packet capture) — exactly what iOS Sandbox allows. Authorized testing only.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ INTERCEPT -->
+<section class="tab-panel" id="tab-intercept">
+  <div class="panel-block">
+    <div class="block-head">
+      <h3>Intercept</h3>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge" id="queueBadge">0 pending</span>
+        <button class="btn btn-sm btn-ghost" id="btnSkipStatic">static: skip</button>
+      </div>
+    </div>
+    <div class="block-body" style="padding:10px 10px 12px">
+      <div class="tool-row">
+        <button class="btn btn-sm" id="btnInterceptToggle">Intercept: —</button>
+        <button class="btn btn-sm btn-ghost" id="btnForwardAll">Forward all</button>
+        <button class="btn btn-sm btn-ghost" id="btnDropAll">Drop all</button>
+      </div>
+      <div class="queue-list" id="queueList"></div>
+      <div id="newReqBanner" class="banner hidden">
+        <span id="newReqText">A new request is waiting.</span>
+        <button class="btn btn-sm btn-orange" id="btnLoadNew">Load</button>
+      </div>
+      <div id="heldMeta" class="muted mono" style="font-size:11px;margin-bottom:6px;min-height:15px"></div>
+      <textarea class="editor" id="interceptEditor" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Waiting for a held request…&#10;&#10;Turn Intercept ON and send traffic through 127.0.0.1:8080."></textarea>
+      <div class="dirty-hint" id="dirtyHint"></div>
+      <div class="intercept-actions">
+        <button class="btn btn-green" id="btnForward">Forward</button>
+        <button class="btn btn-red" id="btnDrop">Drop</button>
+        <button class="btn btn-orange wide" id="btnForwardLog">Forward &amp; Log</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ HISTORY -->
+<section class="tab-panel" id="tab-history">
+  <div class="panel-block">
+    <div class="block-head"><h3>HTTP history</h3><span class="badge" id="histCount">0</span></div>
+    <div class="block-body">
+      <div class="filters">
+        <input type="search" id="histSearch" placeholder="Filter — host, path, keyword…">
+        <div class="filter-row">
+          <select id="histMethod">
+            <option value="">All methods</option>
+            <option>GET</option><option>POST</option><option>PUT</option>
+            <option>DELETE</option><option>PATCH</option><option>HEAD</option><option>OPTIONS</option>
+          </select>
+          <select id="histStatus">
+            <option value="">All status</option>
+            <option value="2">2xx</option><option value="3">3xx</option>
+            <option value="4">4xx</option><option value="5">5xx</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-sm btn-ghost" id="btnHistRefresh">Refresh</button>
+        <button class="btn btn-sm btn-ghost" id="btnHistClear">Clear history</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel-block">
+    <div class="tbl-wrap">
+      <table class="tbl" id="histTable">
+        <thead>
+          <tr>
+            <th class="w-id" data-sort="id">#</th>
+            <th class="w-m" data-sort="method">Method</th>
+            <th data-sort="host">Host / URL</th>
+            <th class="w-s" data-sort="status">Status</th>
+            <th class="col-len w-l" data-sort="length">Length</th>
+            <th class="col-time w-t" data-sort="time_ms">Time</th>
+            <th class="w-a"></th>
+          </tr>
+        </thead>
+        <tbody id="histBody"><tr><td colspan="7"><div class="empty">No requests captured yet.</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ REPEATER -->
+<section class="tab-panel" id="tab-repeater">
+  <div class="panel-block">
+    <div class="block-head">
+      <h3>Repeater</h3>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge blue" id="repTime">—</span>
+        <button class="btn btn-sm btn-ghost" id="btnRepClear">Clear</button>
+        <button class="btn btn-sm btn-orange" id="btnRepSend">Send</button>
+      </div>
+    </div>
+    <div class="block-body" style="padding:10px">
+      <div class="tool-row" style="margin-bottom:8px">
+        <span class="badge" id="repTarget">no target</span>
+        <select id="repTargetScheme" style="width:auto;max-width:120px;padding:6px 26px 6px 8px;font-size:12px;min-height:30px">
+          <option value="http">http</option>
+          <option value="https">https</option>
+        </select>
+        <input type="text" id="repTargetHost" placeholder="host[:port]" style="width:auto;flex:1;min-width:110px;padding:6px 8px;font-size:12px;min-height:30px">
+      </div>
+      <div class="split-2">
+        <div class="pane-box">
+          <div class="pane-h"><span>Request</span><span class="hint">editable</span></div>
+          <textarea class="editor" id="repReq" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="GET / HTTP/1.1&#10;Host: example.com&#10;&#10;"></textarea>
+        </div>
+        <div class="pane-box">
+          <div class="pane-h"><span>Response</span><span class="badge" id="repStatus">—</span></div>
+          <div class="resp-view" id="repResp"><div class="empty">Send a request to see the response.</div></div>
+        </div>
+      </div>
+      <div class="block-head" style="border:0;background:transparent;padding:12px 2px 6px"><h3>Session history</h3></div>
+      <div class="chips" id="repHist" style="padding:0"><span class="note">No sends yet.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCANNER -->
+<section class="tab-panel" id="tab-scanner">
+  <div class="panel-block">
+    <div class="block-head"><h3>Scanner / Fuzzer</h3><span class="badge orange">authorized targets only</span></div>
+    <div class="block-body">
+      <div class="field">
+        <label>Target request (from history)</label>
+        <input type="search" id="scanSearch" placeholder="Search history…" style="margin-bottom:6px">
+        <select id="scanReq"><option value="">— no requests in history —</option></select>
+      </div>
+      <div class="field">
+        <label>Attack type</label>
+        <select id="scanAttack">
+          <option value="traversal">Path Traversal / LFI — ../ variants</option>
+          <option value="xss">Reflected XSS — script &amp; event payloads</option>
+          <option value="sqli">SQL Injection — classic strings</option>
+          <option value="custom">Custom wordlist (one payload per line)</option>
+        </select>
+      </div>
+      <div class="field hidden" id="wordlistField">
+        <label>Custom payloads</label>
+        <textarea class="editor" id="scanWordlist" style="min-height:110px" placeholder="payload1&#10;payload2&#10;payload3" spellcheck="false"></textarea>
+      </div>
+      <div class="field">
+        <label>Injection points</label>
+        <div class="points">
+          <label class="check"><input type="checkbox" class="pt" value="query" checked> Query string</label>
+          <label class="check"><input type="checkbox" class="pt" value="body" checked> Body params</label>
+          <label class="check"><input type="checkbox" class="pt" value="json"> JSON fields</label>
+          <label class="check"><input type="checkbox" class="pt" value="path"> Path segment</label>
+        </div>
+      </div>
+      <button class="btn btn-orange btn-block" id="btnScanRun">Run scan</button>
+      <div class="progress"><div class="bar" id="scanBar"></div></div>
+      <div class="summary" id="scanSummary"><span class="dim">Idle — pick a request and an attack type.</span></div>
+    </div>
+  </div>
+  <div class="panel-block">
+    <div class="block-head"><h3>Results</h3><span class="badge" id="scanResultCount">0</span></div>
+    <div class="tbl-wrap">
+      <table class="tbl scan-tbl" id="scanTable">
+        <thead><tr><th>Payload</th><th>Point</th><th>St</th><th class="col-len">Len</th><th>Flags</th></tr></thead>
+        <tbody id="scanBody"><tr><td colspan="5"><div class="empty">No scan results yet.</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCOPE -->
+<section class="tab-panel" id="tab-scope">
+  <div class="panel-block">
+    <div class="block-head"><h3>Target scope</h3><span class="badge" id="scopeCount">0 entries</span></div>
+    <div class="block-body">
+      <textarea class="editor" id="scopeText" style="min-height:180px" spellcheck="false" autocapitalize="off" autocorrect="off"
+        placeholder="One domain / IP per line, e.g.&#10;192.168.1.42&#10;*.example.test&#10;10.0.0.0/8&#10;api.target.test:8443"></textarea>
+      <div class="switch-row" style="border-left:0;border-right:0;margin:10px -12px -12px">
+        <div>
+          <div class="lbl">Only intercept in-scope</div>
+          <div class="sub">Out-of-scope traffic passes through untouched and unlogged</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="scopeEnforced"><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+  <div class="panel-block">
+    <div class="block-head"><h3>Notes</h3></div>
+    <div class="block-body">
+      <p class="note">
+        An empty list means <b>everything is in scope</b> (default). Wildcards (<code>*.example.test</code>)
+        match subdomains at any depth. CIDR ranges match IP literals.
+        Scope is saved to <code>scope.txt</code> and survives restarts; changes apply to the next request.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CA -->
+<section class="tab-panel" id="tab-ca">
+  <div class="ca-card">
+    <div class="ca-shield">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#ff6633" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/>
+      </svg>
+    </div>
+    <h2>PocketBurp Root CA</h2>
+    <div class="sub">Signs the per-host certificates used to decrypt HTTPS</div>
+    <dl class="kv" id="caInfo">
+      <dt>Subject</dt><dd>loading…</dd>
+    </dl>
+    <a class="btn btn-orange btn-block" id="btnDownloadCa" href="/api/ca/download" download="pocketburp-ca.crt">Download CA Certificate</a>
+  </div>
+
+  <div class="panel-block">
+    <div class="block-head"><h3>Install &amp; trust on iOS</h3></div>
+    <div class="block-body">
+      <ol class="steps">
+        <li>Tap <b>Download CA Certificate</b> above. Safari asks <i>“This website is trying to download a configuration profile”</i> → <b>Allow</b>.</li>
+        <li>Settings → <b>General → VPN &amp; Device Management</b> → <b>PocketBurp Root CA</b> → <b>Install</b> (enter passcode twice).</li>
+        <li>Settings → <b>General → About → Certificate Trust Settings</b> → enable full trust for <b>PocketBurp Root CA</b>.</li>
+        <li>Back in PocketBurp: Wi-Fi → <b>Configure Proxy → Manual</b> → Server <code>127.0.0.1</code>, Port <code>8080</code>.</li>
+        <li>Open an HTTPS site in Safari. Requests now appear in <b>HTTP History</b>, decrypted.</li>
+      </ol>
+      <div class="warn" style="margin-top:12px">
+        <span>⚠︎</span>
+        <span>Apps using <b>certificate pinning</b> (Banking, WhatsApp, most Google apps) will reject this CA — that is expected and normal, even with Burp on a laptop. Remove the profile and reset the Wi-Fi proxy when you are done testing.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-block">
+    <div class="block-head"><h3>How the trust flow works</h3></div>
+    <div class="block-body">
+      <p class="note">
+        PocketBurp generates <code>certs/pocketburp-ca.key</code> + <code>pocketburp-ca.crt</code> on first start
+        (3072-bit key is unnecessary on a phone — 2048-bit RSA is used, valid 10 years). For every
+        <code>CONNECT host:443</code> it signs a fresh 397-day leaf certificate for that hostname
+        (Apple's maximum), presents it to the client, and opens a real TLS connection to the server.
+        Nothing leaves the device.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================ DETAIL SHEET -->
+<div class="sheet hidden" id="sheet">
+  <div class="sheet-head">
+    <button class="btn btn-sm btn-ghost" id="btnSheetClose">Close</button>
+    <div class="sheet-title">
+      <div class="t1" id="sheetTitle">#—</div>
+      <div class="t2" id="sheetSub"></div>
+    </div>
+    <span class="badge" id="sheetStatus">—</span>
+  </div>
+  <div class="sheet-body">
+    <div class="split">
+      <div class="pane">
+        <div class="pane-h"><span>Request</span><span class="hint">editable</span></div>
+        <textarea class="editor" id="sheetReq" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-h"><span>Response</span><span class="hint" id="sheetLen"></span></div>
+        <div class="pane-body"><div class="resp-view" id="sheetResp"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="sheet-foot">
+    <button class="btn btn-sm btn-ghost" id="btnSheetReplay">Replay edited</button>
+    <button class="btn btn-sm btn-orange" id="btnSheetRepeater">Send to Repeater</button>
+    <button class="btn btn-sm btn-orange" id="btnSheetScanner">Send to Scanner</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="statusbar">
+  <span>proxy <b id="sbProxy">—</b></span><span class="sep">│</span>
+  <span>:<b id="sbPort">8080</b></span><span class="sep">│</span>
+  <span>intercept <b id="sbIntercept">—</b></span><span class="sep">│</span>
+  <span><b id="sbPending">0</b> pending</span><span class="sep">│</span>
+  <span><b id="sbHist">0</b> logged</span><span class="sep">│</span>
+  <span>v1.0</span>
+</div>
+
+<script>
+"use strict";
+/* ============================================================================
+   PocketBurp frontend — vanilla JS, zero dependencies, polls the REST API.
+   ========================================================================== */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;");
+
+const S = {
+  tab: "dashboard",
+  status: null,
+  queue: [],
+  heldId: null,
+  dirty: false,
+  history: [],
+  historyTotal: 0,
+  sortKey: "id",
+  sortDir: "desc",
+  detailId: null,
+  rep: { host: "", port: "", scheme: "http", id: null },
+  repSends: [],
+  scanId: null,
+  scanning: false,
+  offline: false,
+  autoSkip: true,
+  scopeDirty: false,
+  pollTimer: null
+};
+
+/* ---------------------------------------------------------------- utilities */
+function toast(msg, kind) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "show " + (kind || "");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { t.className = ""; }, 2400);
+}
+
+async function api(path, opts) {
+  opts = opts || {};
+  const init = { method: opts.method || "GET", headers: {}, cache: "no-store" };
+  if (opts.body !== undefined) {
+    init.headers["Content-Type"] = "application/json";
+    init.body = JSON.stringify(opts.body);
+    init.method = init.method === "GET" ? "POST" : init.method;
+  }
+  const res = await fetch(path, init);
+  if (!res.ok && res.status >= 500) throw new Error("HTTP " + res.status);
+  const txt = await res.text();
+  try { return JSON.parse(txt); } catch (e) { return { raw: txt }; }
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts * 1000);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+function fmtBytes(n) {
+  n = Number(n || 0);
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / 1048576).toFixed(1) + " MB";
+}
+function fmtDuration(ms) {
+  ms = Number(ms || 0);
+  if (ms < 1000) return ms + " ms";
+  return (ms / 1000).toFixed(2) + " s";
+}
+function statusClass(code) {
+  code = Number(code || 0);
+  if (!code) return "s0";
+  if (code < 300) return "s2";
+  if (code < 400) return "s3";
+  if (code < 500) return "s4";
+  return "s5";
+}
+function statusColor(code) {
+  return { s2: "#67d47a", s3: "#e3b341", s4: "#79b8ff", s5: "#ff7b72", s0: "#8b8b8b" }[statusClass(code)];
+}
+
+/* -------------------------------------------------------------- syntax highlight */
+const HL_LIMIT = 120000;
+
+function hlJSON(text) {
+  const out = [];
+  const n = Math.min(text.length, HL_LIMIT);
+  let i = 0;
+  while (i < n) {
+    const c = text[i];
+    if (c === '"') {
+      let j = i + 1;
+      while (j < n) { if (text[j] === "\\") { j += 2; continue; } if (text[j] === '"') break; j++; }
+      let k = j + 1;
+      while (k < n && /\s/.test(text[k])) k++;
+      const cls = text[k] === ":" ? "jk" : "js";
+      out.push('<span class="' + cls + '">' + esc(text.slice(i, j + 1)) + "</span>");
+      i = j + 1; continue;
+    }
+    if ((c >= "0" && c <= "9") || (c === "-" && /[0-9]/.test(text[i + 1] || ""))) {
+      let j = i + 1;
+      while (j < n && /[0-9eE+\-.]/.test(text[j])) j++;
+      out.push('<span class="jn">' + esc(text.slice(i, j)) + "</span>");
+      i = j; continue;
+    }
+    if (text.startsWith("true", i)) { out.push('<span class="jb">true</span>'); i += 4; continue; }
+    if (text.startsWith("false", i)) { out.push('<span class="jb">false</span>'); i += 5; continue; }
+    if (text.startsWith("null", i)) { out.push('<span class="jnul">null</span>'); i += 4; continue; }
+    out.push(esc(c));
+    i++;
+  }
+  if (text.length > HL_LIMIT) out.push('\n<span class="trunc">… display truncated at 120 KB</span>');
+  return out.join("");
+}
+
+function hlTag(tag) {
+  if (tag.startsWith("<!--")) return '<span class="hc">' + esc(tag) + "</span>";
+  const m = tag.match(/^<(\/?)([A-Za-z0-9:_-]+)/);
+  if (!m) return esc(tag);
+  let rest = esc(tag.slice(m[0].length));
+  rest = rest.replace(
+    /([A-Za-z0-9:_-]+)(\s*=\s*)(&quot;[\s\S]*?&quot;|'[^']*')/g,
+    '<span class="ha">$1</span>$2<span class="hs">$3</span>'
+  );
+  return "&lt;" + '<span class="hp">' + esc(m[1] + m[2]) + "</span>" + rest;
+}
+
+function hlHTML(text) {
+  const out = [];
+  const n = Math.min(text.length, HL_LIMIT);
+  let i = 0;
+  while (i < n) {
+    if (text[i] === "<") {
+      const end = text.indexOf(">", i);
+      if (end < 0 || end > n) { out.push(esc(text.slice(i, n))); break; }
+      out.push(hlTag(text.slice(i, end + 1)));
+      i = end + 1;
+    } else {
+      let j = text.indexOf("<", i);
+      if (j < 0 || j > n) j = n;
+      out.push(esc(text.slice(i, j)));
+      i = j;
+    }
+  }
+  if (text.length > HL_LIMIT) out.push('\n<span class="trunc">… display truncated at 120 KB</span>');
+  return out.join("");
+}
+
+function hlPlain(text) {
+  if (text.length > HL_LIMIT) {
+    return esc(text.slice(0, HL_LIMIT)) + '\n<span class="trunc">… display truncated at 120 KB</span>';
+  }
+  return esc(text);
+}
+
+function hlHeaders(text) {
+  return String(text || "").split(/\r?\n/).map((line) => {
+    const i = line.indexOf(":");
+    if (i > 0) return '<span class="hh">' + esc(line.slice(0, i)) + "</span>:" +
+      '<span class="hv">' + esc(line.slice(i + 1)) + "</span>";
+    return esc(line);
+  }).join("\n");
+}
+
+function contentTypeOf(headers) {
+  const m = /content-type:\s*([^\r\n]+)/i.exec(headers || "");
+  return m ? m[1].toLowerCase() : "";
+}
+
+function hlBody(text, ctype) {
+  text = text || "";
+  const head = text.slice(0, 200).trim();
+  if (ctype.includes("json") || head.startsWith("{") || head.startsWith("[")) return hlJSON(text);
+  if (ctype.includes("html") || ctype.includes("xml") || /^<(?:!doctype|html|\?xml|[a-z]+[\s>])/i.test(head)) return hlHTML(text);
+  return hlPlain(text);
+}
+
+/* Render a full HTTP response (status line + headers + body) into an element. */
+function renderResponse(el, statusLine, headers, bodyText) {
+  const bad = !/^HTTP\/[\d.]+\s+[23]/.test(statusLine || "");
+  el.innerHTML =
+    '<div class="statusline' + (bad ? " bad" : "") + '">' + esc(statusLine || "—") + "</div>" +
+    '<pre class="hdrs">' + hlHeaders(headers || "") + "</pre>" +
+    '<pre class="bodypre">' + hlBody(bodyText || "", contentTypeOf(headers)) + "</pre>";
+}
+
+/* --------------------------------------------------------------- tabs */
+function showTab(name) {
+  S.tab = name;
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === "tab-" + name));
+  if (name === "history") refreshHistory();
+  if (name === "scanner") loadScanPicker();
+  if (name === "repeater") renderRepHistory();
+  if (name === "scope") loadScope();
+  if (name === "ca") loadCa();
+  if (name === "intercept") renderQueue();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
+document.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.goto)));
+
+/* --------------------------------------------------------------- status */
+function renderTop(st) {
+  const p = st.proxy || {};
+  const running = !!p.running;
+  const dot = $("topDot");
+  dot.className = "dot " + (running ? "on" : "off");
+  $("topState").textContent = running ? "running :" + p.port : "stopped";
+
+  $("dashDot").className = "dot " + (running ? "on" : "off");
+  $("dashState").textContent = running ? "RUNNING" : "STOPPED";
+  $("dashAddr").textContent = (p.host || "0.0.0.0") + ":" + (p.port || 8080) +
+    (running && p.uptime ? "  ·  up " + p.uptime + "s" : "");
+
+  const ic = st.intercept || {};
+  const on = !!ic.enabled;
+  $("ibState").textContent = on ? "ON" : "OFF";
+  $("ibSub").textContent = on ? "Holding traffic — approve each request" : "Traffic passes straight through";
+  $("btnIntercept").classList.toggle("on", on);
+  $("topIntercept").classList.toggle("on", on);
+  $("topIntercept").textContent = on ? "INTERCEPT ON" : "INTERCEPT OFF";
+  $("btnInterceptToggle").textContent = "Intercept: " + (on ? "ON" : "OFF");
+  $("btnInterceptToggle").className = "btn btn-sm " + (on ? "btn-green" : "btn-ghost");
+
+  const stats = p.stats || {};
+  $("tIntercepted").textContent = stats.requests || 0;
+  $("tForwarded").textContent = stats.forwarded || 0;
+  $("tDropped").textContent = stats.dropped || 0;
+  $("tHeld").textContent = ic.pending || 0;
+  $("tHistory").textContent = st.history_count || 0;
+  $("tErrors").textContent = stats.errors || 0;
+
+  S.autoSkip = ic.auto_skip_static !== false;
+  $("btnSkipStatic").textContent = S.autoSkip ? "static: skip" : "static: intercept";
+
+  $("sbProxy").textContent = running ? "running" : "stopped";
+  $("sbProxy").style.color = running ? "#67d47a" : "#ff7b72";
+  $("sbPort").textContent = p.port || 8080;
+  $("sbIntercept").textContent = on ? "ON" : "OFF";
+  $("sbIntercept").style.color = on ? "#e3b341" : "#9c9c9c";
+  $("sbPending").textContent = ic.pending || 0;
+  $("sbHist").textContent = st.history_count || 0;
+  $("btnProxyStart").classList.toggle("hidden", running);
+  $("btnProxyStop").classList.toggle("hidden", !running);
+}
+
+function renderLiveLog(rows) {
+  const el = $("liveLog");
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="empty">No traffic yet.<br>Start the proxy and point Wi-Fi at 127.0.0.1:8080.</div>';
+    return;
+  }
+  el.innerHTML = rows.slice(0, 5).map((r) => (
+    '<div class="live-row" data-open="' + r.id + '">' +
+      '<span class="m ' + esc(r.method) + '">' + esc(r.method) + "</span>" +
+      '<div class="live-host">' + esc(r.host) + '<span class="p">' + esc(r.path) + "</span></div>" +
+      '<div class="live-status" style="color:' + statusColor(r.status) + '">' + (r.status || "—") + "</div>" +
+    "</div>"
+  )).join("");
+}
+
+/* --------------------------------------------------------------- intercept */
+function renderQueue() {
+  const q = S.queue || [];
+  const badge = $("queueBadge");
+  badge.textContent = q.length + " pending";
+  badge.className = "badge " + (q.length ? "red" : "");
+  const tb = $("tabBadgeIntercept");
+  tb.textContent = q.length;
+  tb.classList.toggle("show", q.length > 0);
+
+  const list = $("queueList");
+  if (!q.length) { list.innerHTML = ""; }
+  else {
+    list.innerHTML = q.map((p, i) => (
+      '<button class="qchip' + (p.id === S.heldId ? " active" : "") + '" data-held="' + p.id + '">' +
+        "<b>#" + (i + 1) + "</b> " + esc(p.method) + " " + esc(p.host) + esc(p.path) + "</button>"
+    )).join("");
+  }
+
+  const held = q.find((p) => p.id === S.heldId);
+  if (!held) {
+    $("heldMeta").textContent = q.length ? "Select a held request above." : "";
+    $("interceptEditor").value = "";
+    $("interceptEditor").placeholder = q.length
+      ? "Select a held request above."
+      : "Waiting for a held request…\n\nTurn Intercept ON, then browse on the device or launch the app under test.";
+    $("btnForward").disabled = true; $("btnDrop").disabled = true; $("btnForwardLog").disabled = true;
+  } else {
+    $("heldMeta").textContent = "#" + held.id + "  " + held.scheme + "://" + held.host +
+      "  ·  queued " + held.age + "s";
+    $("btnForward").disabled = false; $("btnDrop").disabled = false; $("btnForwardLog").disabled = false;
+  }
+}
+
+function loadHeld(item, force) {
+  if (!item) return;
+  if (S.dirty && !force) {
+    $("newReqBanner").classList.remove("hidden");
+    $("newReqText").textContent = "Unsaved edits — a different request is waiting.";
+    return;
+  }
+  S.heldId = item.id;
+  S.dirty = false;
+  $("interceptEditor").value = item.raw;
+  $("interceptEditor").classList.remove("dirty");
+  $("dirtyHint").textContent = "";
+  $("newReqBanner").classList.add("hidden");
+  renderQueue();
+}
+
+function syncQueue(pending) {
+  S.queue = pending;
+  if (!pending.length) { S.heldId = null; renderQueue(); return; }
+  const current = pending.find((p) => p.id === S.heldId);
+  if (!current) {
+    const next = pending[0];
+    if (S.heldId !== null && S.dirty) {
+      $("newReqBanner").classList.remove("hidden");
+      $("newReqText").textContent = "New request #" + next.id + " waiting — discard edits?";
+      $("btnLoadNew").dataset.id = next.id;
+    } else {
+      loadHeld(next, true);
+      return;
+    }
+  }
+  renderQueue();
+}
+
+$("interceptEditor").addEventListener("input", () => {
+  const held = S.queue.find((p) => p.id === S.heldId);
+  S.dirty = !held || $("interceptEditor").value !== held.raw;
+  $("interceptEditor").classList.toggle("dirty", S.dirty);
+  $("dirtyHint").textContent = S.dirty ? "Modified — Forward sends your edited request." : "";
+});
+
+$("queueList").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-held]");
+  if (!btn) return;
+  const id = Number(btn.dataset.held);
+  const item = S.queue.find((p) => p.id === id);
+  if (!item) return;
+  if (S.dirty && !confirm("Discard your edits to the current request?")) return;
+  loadHeld(item, true);
+});
+
+$("btnLoadNew").addEventListener("click", (e) => {
+  const id = Number(e.target.dataset.id || 0);
+  const item = S.queue.find((p) => p.id === id) || S.queue[0];
+  if (item) loadHeld(item, true);
+});
+
+async function interceptAct(kind) {
+  if (!S.heldId) { toast("No held request", "err"); return; }
+  const id = S.heldId;
+  const raw = $("interceptEditor").value;
+  try {
+    if (kind === "drop") {
+      await api("/api/queue/" + id + "/drop", { method: "POST" });
+      toast("Request dropped", "ok");
+    } else if (S.dirty || kind === "edit") {
+      await api("/api/queue/" + id + "/edit", { method: "POST", body: { raw: raw } });
+      toast(kind === "log" ? "Forwarded (edited) & logged" : "Forwarded with edits", "ok");
+    } else {
+      await api("/api/queue/" + id + "/forward", { method: "POST" });
+      toast("Forwarded", "ok");
+    }
+    S.dirty = false;
+    S.heldId = null;
+    $("newReqBanner").classList.add("hidden");
+    await pollOnce();
+    if (kind === "log") { showTab("history"); refreshHistory(); }
+  } catch (e) {
+    toast("Action failed: " + e.message, "err");
+  }
+}
+
+$("btnForward").addEventListener("click", () => interceptAct("forward"));
+$("btnDrop").addEventListener("click", () => interceptAct("drop"));
+$("btnForwardLog").addEventListener("click", () => interceptAct("log"));
+
+$("btnForwardAll").addEventListener("click", async () => {
+  const r = await api("/api/queue/forward_all", { method: "POST" });
+  toast("Released " + (r.released || 0) + " request(s)", "ok");
+  await pollOnce();
+});
+$("btnDropAll").addEventListener("click", async () => {
+  if (!confirm("Drop all held requests?")) return;
+  const r = await api("/api/queue/drop_all", { method: "POST" });
+  toast("Dropped " + (r.released || 0) + " request(s)", "ok");
+  await pollOnce();
+});
+$("btnSkipStatic").addEventListener("click", async () => {
+  const r = await api("/api/intercept/autoskip", { method: "POST", body: { enabled: !S.autoSkip } });
+  S.autoSkip = !!r.auto_skip_static;
+  $("btnSkipStatic").textContent = S.autoSkip ? "static: skip" : "static: intercept";
+  toast("Static assets: " + (S.autoSkip ? "auto-forwarded" : "intercepted"), "ok");
+});
+
+async function toggleIntercept(force) {
+  try {
+    const r = await api("/api/intercept/toggle", { method: "POST", body: force === undefined ? {} : { enabled: force } });
+    toast("Intercept " + (r.enabled ? "ON" : "OFF"), r.enabled ? "ok" : "");
+    await pollOnce();
+  } catch (e) { toast(e.message, "err"); }
+}
+$("btnIntercept").addEventListener("click", () => toggleIntercept());
+$("topIntercept").addEventListener("click", () => toggleIntercept());
+$("btnInterceptToggle").addEventListener("click", () => toggleIntercept());
+
+/* --------------------------------------------------------------- proxy start/stop */
+$("btnProxyStart").addEventListener("click", async () => {
+  try {
+    const r = await api("/api/proxy/start", { method: "POST", body: {} });
+    toast(r.ok ? "Proxy started on :" + (r.proxy.port) : "Failed: " + r.message, r.ok ? "ok" : "err");
+    await pollOnce();
+  } catch (e) { toast(e.message, "err"); }
+});
+$("btnProxyStop").addEventListener("click", async () => {
+  try {
+    const r = await api("/api/proxy/stop", { method: "POST", body: {} });
+    toast(r.ok ? "Proxy stopped" : "Failed: " + r.message, r.ok ? "" : "err");
+    await pollOnce();
+  } catch (e) { toast(e.message, "err"); }
+});
+
+/* --------------------------------------------------------------- history */
+let histTimer = null;
+function histFilters() {
+  return {
+    q: $("histSearch").value.trim(),
+    method: $("histMethod").value,
+    status: $("histStatus").value
+  };
+}
+
+async function refreshHistory() {
+  const f = histFilters();
+  const qs = new URLSearchParams({ limit: "300" });
+  if (f.q) qs.set("q", f.q);
+  if (f.method) qs.set("method", f.method);
+  if (f.status) qs.set("status", f.status);
+  try {
+    const r = await api("/api/history?" + qs.toString());
+    S.history = r.rows || [];
+    S.historyTotal = r.total || S.history.length;
+    renderHistory();
+    renderLiveLog(S.history.slice().sort((a, b) => b.id - a.id));
+  } catch (e) { /* offline */ }
+}
+
+function renderHistory() {
+  const rows = S.history.slice().sort((a, b) => {
+    const k = S.sortKey, d = S.sortDir === "asc" ? 1 : -1;
+    let av = a[k], bv = b[k];
+    if (typeof av === "string") av = av.toLowerCase();
+    if (typeof bv === "string") bv = bv.toLowerCase();
+    if (av === bv) return 0;
+    return av > bv ? d : -d;
+  });
+  $("histCount").textContent = (S.historyTotal || 0) + " logged";
+  document.querySelectorAll("#histTable thead th").forEach((th) => {
+    const on = th.dataset.sort === S.sortKey;
+    th.innerHTML = th.innerHTML.replace(/\s*<span class="arrow">.*?<\/span>/g, "");
+    if (on) th.innerHTML += ' <span class="arrow">' + (S.sortDir === "asc" ? "▲" : "▼") + "</span>";
+  });
+  const body = $("histBody");
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="7"><div class="empty">No requests match. Send traffic through the proxy, or clear the filters.</div></td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map((r) => (
+    '<tr data-open="' + r.id + '"' + (S.detailId === r.id ? ' class="sel"' : "") + ">" +
+      '<td class="num">' + r.id + "</td>" +
+      '<td><span class="m ' + esc(r.method) + '">' + esc(r.method) + "</span></td>" +
+      '<td class="host-cell w-host"><div class="h">' + esc(r.host) + (r.tls ? "  🔒" : "") + "</div>" +
+        '<div class="p">' + esc(r.path) + "</div></td>" +
+      '<td class="' + statusClass(r.status) + ' mono" style="color:' + statusColor(r.status) + '">' +
+        (r.status || "—") + "</td>" +
+      '<td class="col-len mono">' + fmtBytes(r.length) + "</td>" +
+      '<td class="col-time mono">' + fmtDuration(r.time_ms) + "</td>" +
+      '<td><div class="row-acts">' +
+        '<button class="r" data-rep-row="' + r.id + '" title="Send to Repeater">R</button>' +
+        '<button class="s" data-scan-row="' + r.id + '" title="Send to Scanner">S</button>' +
+      "</div></td>" +
+    "</tr>"
+  )).join("");
+}
+
+/* per-row shortcuts: R = Repeater, S = Scanner */
+$("histBody").addEventListener("click", async (e) => {
+  const rep = e.target.closest("[data-rep-row]");
+  const scn = e.target.closest("[data-scan-row]");
+  if (!rep && !scn) return;
+  e.stopPropagation();
+  const id = Number((rep || scn).dataset.repRow || (rep || scn).dataset.scanRow);
+  try {
+    const row = await api("/api/history/" + id);
+    if (row.error) { toast(row.error, "err"); return; }
+    if (rep) sendToRepeater(row); else sendToScanner(row);
+  } catch (err) { toast(err.message, "err"); }
+});
+
+document.querySelectorAll("#histTable thead th").forEach((th) => {
+  th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    if (!k) return;
+    if (S.sortKey === k) S.sortDir = S.sortDir === "asc" ? "desc" : "asc";
+    else { S.sortKey = k; S.sortDir = k === "id" ? "desc" : "asc"; }
+    renderHistory();
+  });
+});
+
+$("histSearch").addEventListener("input", () => { clearTimeout(histTimer); histTimer = setTimeout(refreshHistory, 250); });
+$("histMethod").addEventListener("change", refreshHistory);
+$("histStatus").addEventListener("change", refreshHistory);
+$("btnHistRefresh").addEventListener("click", () => { refreshHistory(); toast("History refreshed"); });
+$("btnHistClear").addEventListener("click", async () => {
+  if (!confirm("Delete all captured requests?")) return;
+  await api("/api/history/clear", { method: "POST" });
+  S.history = []; S.historyTotal = 0; renderHistory(); renderLiveLog([]);
+  toast("History cleared", "ok");
+});
+
+$("histBody").addEventListener("click", (e) => {
+  const tr = e.target.closest("[data-open]");
+  if (tr) openDetail(Number(tr.dataset.open));
+});
+$("liveLog").addEventListener("click", (e) => {
+  const row = e.target.closest("[data-open]");
+  if (row) openDetail(Number(row.dataset.open));
+});
+
+/* --------------------------------------------------------------- detail sheet */
+async function openDetail(id) {
+  try {
+    const row = await api("/api/history/" + id);
+    if (row.error) { toast(row.error, "err"); return; }
+    S.detailId = id;
+    $("sheet").classList.remove("hidden");
+    $("sheetTitle").textContent = "#" + row.id + "  " + row.method + " " + row.host + row.path;
+    $("sheetSub").textContent = (row.scheme || "http") + " · " + fmtBytes(row.length) + " · " +
+      fmtDuration(row.time_ms) + (row.note ? " · " + row.note : "");
+    const badge = $("sheetStatus");
+    badge.textContent = row.status || "—";
+    badge.className = "badge";
+    badge.style.color = statusColor(row.status);
+    badge.style.border = "1px solid " + statusColor(row.status) + "55";
+    $("sheetLen").textContent = fmtBytes(row.length);
+    $("sheetReq").value = row.request_raw || "";
+    renderResponse($("sheetResp"), row.status_line || ("HTTP/1.1 " + (row.status || "")),
+      row.resp_headers || "", row.response_body_text || "");
+    S.sheetRow = row;
+  } catch (e) { toast("Cannot load request: " + e.message, "err"); }
+}
+
+$("btnSheetClose").addEventListener("click", () => {
+  $("sheet").classList.add("hidden");
+  S.detailId = null;
+  renderHistory();
+});
+
+$("btnSheetRepeater").addEventListener("click", () => {
+  const row = S.sheetRow;
+  if (!row) return;
+  sendToRepeater(row);
+  $("sheet").classList.add("hidden");
+});
+
+$("btnSheetScanner").addEventListener("click", () => {
+  const row = S.sheetRow;
+  if (!row) return;
+  sendToScanner(row);
+  $("sheet").classList.add("hidden");
+});
+
+$("btnSheetReplay").addEventListener("click", async () => {
+  const row = S.sheetRow;
+  if (!row) return;
+  const raw = $("sheetReq").value;
+  $("sheetLen").textContent = "sending…";
+  try {
+    const r = await api("/api/repeater/send", {
+      method: "POST",
+      body: { raw: raw, host: row.host, port: row.port, scheme: row.scheme, id: row.id }
+    });
+    const badge = $("sheetStatus");
+    badge.textContent = r.status || "ERR";
+    badge.style.color = statusColor(r.status);
+    $("sheetLen").textContent = fmtBytes(r.length) + " · " + fmtDuration(r.time_ms);
+    renderResponse($("sheetResp"), r.status_line || (r.ok ? "" : "PocketBurp error: " + (r.error || "")),
+      r.headers || "", (r.body || "").split("\r\n\r\n").slice(1).join("\r\n\r\n"));
+    toast(r.ok ? "Replayed — " + r.status + " in " + r.time_ms + " ms" : "Failed: " + r.error,
+      r.ok ? "ok" : "err");
+  } catch (e) { toast(e.message, "err"); }
+});
+
+function sendToRepeater(row) {
+  S.rep = { host: row.host, port: row.port, scheme: row.scheme, id: row.id };
+  $("repReq").value = row.request_raw || "";
+  $("repTargetHost").value = row.host + (row.port && row.port !== 80 && row.port !== 443 ? ":" + row.port : "");
+  $("repTargetScheme").value = row.scheme === "https" ? "https" : "http";
+  $("repTarget").textContent = row.scheme + "://" + row.host + ":" + row.port;
+  $("repStatus").textContent = "—";
+  $("repResp").innerHTML = '<div class="empty">Request loaded — press Send.</div>';
+  showTab("repeater");
+  toast("Sent to Repeater (#" + row.id + ")", "ok");
+}
+
+function sendToScanner(row) {
+  showTab("scanner");
+  ensurePickerOption(row);
+  $("scanReq").value = String(row.id);
+  $("scanSearch").value = "";
+  filterPicker("");
+  toast("Request #" + row.id + " selected for scanning", "ok");
+}
+
+/* --------------------------------------------------------------- repeater */
+function repTargetMeta() {
+  const hostRaw = $("repTargetHost").value.trim();
+  let host = hostRaw, port = null;
+  const m = hostRaw.match(/^(.*?):(\d+)$/);
+  if (m) { host = m[1]; port = Number(m[2]); }
+  return { host: host, port: port, scheme: $("repTargetScheme").value };
+}
+
+async function repSend() {
+  const raw = $("repReq").value;
+  if (!raw.trim()) { toast("Nothing to send", "err"); return; }
+  const meta = repTargetMeta();
+  $("repTime").textContent = "sending…";
+  try {
+    const r = await api("/api/repeater/send", {
+      method: "POST",
+      body: { raw: raw, host: meta.host || S.rep.host, port: meta.port || S.rep.port, scheme: meta.scheme }
+    });
+    $("repTime").textContent = fmtDuration(r.time_ms);
+    const badge = $("repStatus");
+    badge.textContent = r.ok ? r.status : "error";
+    badge.style.color = statusColor(r.status);
+    const idx = (r.body || "").indexOf("\r\n\r\n");
+    renderResponse($("repResp"),
+      r.status_line || (r.ok ? "" : "PocketBurp: " + (r.error || "request failed")),
+      r.headers || "",
+      idx >= 0 ? r.body.slice(idx + 4) : (r.ok ? "" : r.body || ""));
+    toast(r.ok ? "Sent — " + r.status + " in " + r.time_ms + " ms" : "Failed: " + r.error,
+      r.ok ? "ok" : "err");
+    loadRepHistory();
+  } catch (e) {
+    $("repTime").textContent = "—";
+    toast(e.message, "err");
+  }
+}
+$("btnRepSend").addEventListener("click", repSend);
+$("btnRepClear").addEventListener("click", () => {
+  $("repReq").value = "";
+  $("repResp").innerHTML = '<div class="empty">Send a request to see the response.</div>';
+  $("repStatus").textContent = "—";
+  $("repTime").textContent = "—";
+  api("/api/repeater/clear", { method: "POST" }).catch(() => {});
+  loadRepHistory();
+});
+$("repReq").addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); repSend(); }
+});
+
+async function loadRepHistory() {
+  try {
+    const r = await api("/api/repeater/history");
+    S.repSends = r.sends || [];
+    renderRepHistory();
+  } catch (e) {}
+}
+function renderRepHistory() {
+  const el = $("repHist");
+  const sends = S.repSends || [];
+  if (!sends.length) { el.innerHTML = '<span class="note">No sends yet.</span>'; return; }
+  el.innerHTML = sends.map((s) => (
+    '<button class="chip" data-rep="' + s.id + '"><b>#' + s.id + "</b> " + esc(s.method) + " " +
+      esc(s.path) + ' <span class="st">' + (s.status || "ERR") + "</span> · " + fmtDuration(s.time_ms) +
+    "</button>"
+  )).join("");
+}
+$("repHist").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-rep]");
+  if (!btn) return;
+  const id = Number(btn.dataset.rep);
+  const s = S.repSends.find((x) => x.id === id);
+  if (!s) return;
+  $("repReq").value = s.request || "";
+  $("repTargetHost").value = s.host || "";
+  $("repTargetScheme").value = s.scheme === "https" ? "https" : "http";
+  $("repTarget").textContent = (s.scheme || "http") + "://" + (s.host || "") + ":" + (s.port || "");
+  $("repStatus").textContent = s.status || "—";
+  $("repTime").textContent = fmtDuration(s.time_ms);
+  try {
+    const full = await api("/api/repeater/entry/" + id);
+    if (full && full.request) $("repReq").value = full.request;
+    if (full && full.response) {
+      const idx = full.response.indexOf("\r\n\r\n");
+      renderResponse($("repResp"), full.status_line || ("HTTP/1.1 " + full.status),
+        full.headers || "", idx >= 0 ? full.response.slice(idx + 4) : "");
+    }
+  } catch (err) {}
+});
+
+/* --------------------------------------------------------------- scanner */
+async function loadScanPicker() {
+  try {
+    const r = await api("/api/history?limit=120");
+    const rows = r.rows || [];
+    const sel = $("scanReq");
+    const prev = sel.value;
+    sel.innerHTML = rows.map((x) => (
+      '<option value="' + x.id + '">#' + x.id + "  " + esc(x.method) + "  " + esc(x.host) + esc(x.path) + "</option>"
+    )).join("") || '<option value="">— no requests in history —</option>';
+    if (prev) sel.value = prev;
+    filterPicker($("scanSearch").value);
+    if (!S.scanId) loadScanResults(scannerLatestId);
+  } catch (e) {}
+}
+
+function ensurePickerOption(row) {
+  const sel = $("scanReq");
+  if ([...sel.options].some((o) => o.value === String(row.id))) return;
+  const opt = document.createElement("option");
+  opt.value = String(row.id);
+  opt.textContent = "#" + row.id + "  " + row.method + "  " + row.host + row.path;
+  sel.appendChild(opt);
+}
+function filterPicker(text) {
+  const t = (text || "").toLowerCase();
+  [...$("scanReq").options].forEach((o) => {
+    o.hidden = !!t && o.textContent.toLowerCase().indexOf(t) < 0;
+  });
+}
+$("scanSearch").addEventListener("input", (e) => filterPicker(e.target.value));
+$("scanAttack").addEventListener("change", (e) => {
+  $("wordlistField").classList.toggle("hidden", e.target.value !== "custom");
+});
+
+async function runScan() {
+  const id = $("scanReq").value;
+  if (!id) { toast("Pick a request from history first", "err"); return; }
+  const points = [...document.querySelectorAll(".pt:checked")].map((c) => c.value);
+  if (!points.length) { toast("Select at least one injection point", "err"); return; }
+  const body = {
+    request_id: Number(id),
+    attack: $("scanAttack").value,
+    wordlist: $("scanWordlist").value,
+    points: points
+  };
+  $("btnScanRun").disabled = true;
+  $("scanSummary").innerHTML = '<span class="dim">Starting…</span>';
+  try {
+    const r = await api("/api/scanner/run", { method: "POST", body: body });
+    if (r.error) { toast(r.error, "err"); $("btnScanRun").disabled = false; return; }
+    S.scanId = r.scan_id;
+    S.scanning = true;
+    pollScan();
+  } catch (e) {
+    toast(e.message, "err");
+    $("btnScanRun").disabled = false;
+  }
+}
+$("btnScanRun").addEventListener("click", runScan);
+
+let scannerLatestId = null;
+async function pollScan() {
+  if (!S.scanId) return;
+  try {
+    const st = await api("/api/scanner/results?scan_id=" + S.scanId);
+    renderScan(st);
+    scannerLatestId = st.id || S.scanId;
+    if (st.status === "running" || st.status === "starting") {
+      setTimeout(pollScan, 1400);
+    } else {
+      S.scanning = false;
+      $("btnScanRun").disabled = false;
+    }
+  } catch (e) {
+    S.scanning = false;
+    $("btnScanRun").disabled = false;
+  }
+}
+
+async function loadScanResults(id) {
+  try {
+    const st = await api("/api/scanner/results" + (id ? "?scan_id=" + id : ""));
+    if (st && st.id) { S.scanId = st.id; renderScan(st); }
+  } catch (e) {}
+}
+
+function renderScan(st) {
+  if (!st || st.status === "idle") {
+    $("scanSummary").innerHTML = '<span class="dim">Idle — pick a request and an attack type.</span>';
+    return;
+  }
+  const pct = st.total ? Math.round((st.done / st.total) * 100) : (st.status === "done" ? 100 : 0);
+  $("scanBar").style.width = pct + "%";
+  const res = st.results || [];
+  const flagged = res.filter((r) => (r.flags || []).length).length;
+  const reflected = res.filter((r) => r.reflected).length;
+  const base = st.baseline || {};
+  $("scanSummary").innerHTML =
+    '<span class="badge ' + (st.status === "running" ? "orange" : st.status === "error" ? "red" : "green") + '">' +
+      esc(st.status) + "</span>" +
+    '<span class="badge blue">' + esc(st.attack_label || st.attack) + "</span>" +
+    "<span>" + st.done + "/" + st.total + " sent</span>" +
+    '<span class="badge">baseline ' + (base.status || "—") + " · " + fmtBytes(base.length) + "</span>" +
+    (reflected ? '<span class="badge orange">' + reflected + " reflected</span>" : "") +
+    (flagged ? '<span class="badge red">' + flagged + " flagged</span>" : "");
+  if (st.error) $("scanSummary").innerHTML += '<div class="warn" style="margin-top:8px">' + esc(st.error) + "</div>";
+  $("scanResultCount").textContent = res.length + " rows";
+
+  const body = $("scanBody");
+  if (!res.length) {
+    body.innerHTML = '<tr><td colspan="5"><div class="empty">' +
+      (st.status === "running" ? "Scanning…" : "No results.") + "</div></td></tr>";
+    return;
+  }
+  body.innerHTML = res.map((r) => {
+    const flags = r.flags || [];
+    const cls = flags.includes("5xx") ? "row-flag5xx"
+      : flags.includes("reflected") ? "row-flagreflected"
+      : flags.includes("length") ? "row-flaglength" : "";
+    const flagHtml = flags.map((f) => {
+      const kind = (f === "5xx" || f === "error") ? "fp-err"
+        : (f === "reflected") ? "fp-ok" : "fp-warn";
+      return '<span class="flagpill ' + kind + '">' + esc(f) + "</span>";
+    }).join("") || '<span class="flagpill fp-ok">clean</span>';
+    return '<tr class="' + cls + '">' +
+      '<td class="payload-cell">' + esc(r.payload) + "</td>" +
+      '<td class="mono" style="font-size:10.5px;color:#9c9c9c">' + esc(r.point) + "</td>" +
+      '<td class="mono" style="color:' + statusColor(r.status) + '">' + (r.status || "—") + "</td>" +
+      '<td class="col-len mono">' + fmtBytes(r.length) + "</td>" +
+      "<td>" + flagHtml + "</td>" +
+    "</tr>";
+  }).join("");
+}
+
+/* --------------------------------------------------------------- scope */
+async function loadScope() {
+  if (S.scopeDirty) return;
+  try {
+    const s = await api("/api/scope");
+    $("scopeText").value = s.raw || "";
+    $("scopeEnforced").checked = !!s.enforced;
+    $("scopeCount").textContent = (s.entries || []).length + " entries";
+  } catch (e) {}
+}
+let scopeTimer = null;
+function pushScope() {
+  S.scopeDirty = true;
+  clearTimeout(scopeTimer);
+  scopeTimer = setTimeout(async () => {
+    const body = { raw: $("scopeText").value, enforced: $("scopeEnforced").checked };
+    try {
+      const s = await api("/api/scope", { method: "POST", body: body });
+      $("scopeCount").textContent = (s.entries || []).length + " entries";
+      S.scopeDirty = false;
+      toast("Scope saved", "ok");
+    } catch (e) { toast(e.message, "err"); }
+  }, 700);
+}
+$("scopeText").addEventListener("input", pushScope);
+$("scopeEnforced").addEventListener("change", pushScope);
+
+/* --------------------------------------------------------------- CA */
+async function loadCa() {
+  try {
+    const info = await api("/api/ca/info");
+    const rows = [
+      ["Subject", info.subject || "—"],
+      ["Issuer", info.issuer || "—"],
+      ["Expires", info.expires || "—"],
+      ["SHA-256", info.fingerprint || "—"],
+      ["Serial", info.serial || "—"],
+      ["Leaf validity", (info.leaf_days || 397) + " days per host"]
+    ];
+    $("caInfo").innerHTML = rows.map((r) =>
+      "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>").join("");
+    $("btnDownloadCa").setAttribute("href", "/api/ca/download");
+  } catch (e) {
+    if (!S.offline) {
+      $("caInfo").innerHTML = "<dt>Status</dt><dd>backend unreachable — start run.sh</dd>";
+    }
+  }
+}
+
+/* --------------------------------------------------------------- polling */
+async function pollOnce() {
+  try {
+    const st = await api("/api/status");
+    S.offline = false;
+    $("offline").classList.remove("show");
+    S.status = st;
+    renderTop(st);
+
+    let q = { pending: [], count: 0 };
+    if ((st.intercept && st.intercept.pending) || S.heldId) {
+      q = await api("/api/queue");
+    }
+    syncQueue(q.pending || []);
+
+    if (S.tab === "history" || S.tab === "dashboard") {
+      const r = await api("/api/history?limit=300");
+      S.history = r.rows || [];
+      S.historyTotal = r.total || S.history.length;
+      renderHistory();
+      renderLiveLog(S.history.slice().sort((a, b) => b.id - a.id));
+    }
+  } catch (e) {
+    if (!S.offline) enterOffline();
+  }
+}
+
+function enterOffline() {
+  S.offline = true;
+  $("offline").classList.add("show");
+  const demo = DEMO.status;
+  renderTop(demo);
+  S.queue = DEMO.queue;
+  renderQueue();
+  S.history = DEMO.history;
+  S.historyTotal = DEMO.history.length;
+  renderHistory();
+  renderLiveLog(DEMO.history);
+  renderScan(DEMO.scan);
+  $("caInfo").innerHTML = Object.entries(DEMO.ca).map(([k, v]) =>
+    "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("");
+  $("scopeText").value = DEMO.scope.raw;
+  $("scopeEnforced").checked = DEMO.scope.enforced;
+  $("scopeCount").textContent = DEMO.scope.entries.length + " entries";
+  $("repReq").value = DEMO.repeater.request;
+  $("repTargetHost").value = "192.168.1.42:3000";
+  $("repTargetScheme").value = "http";
+  renderResponse($("repResp"), DEMO.repeater.status_line, DEMO.repeater.headers, DEMO.repeater.body);
+  $("repStatus").textContent = "200";
+  $("repTime").textContent = "41 ms";
+  S.repSends = DEMO.repSends;
+  renderRepHistory();
+  if (S.queue.length) loadHeld(S.queue[0], true);
+}
+
+async function poll() {
+  if (document.hidden) return;
+  await pollOnce();
+  if (S.scanning) pollScan();
+}
+
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pollOnce(); });
+
+/* --------------------------------------------------------------- preview data */
+const DEMO = {
+  status: {
+    proxy: { running: true, host: "0.0.0.0", port: 8080, uptime: 128, stats: {
+      requests: 42, forwarded: 39, dropped: 1, errors: 2, https: 31, http: 11, connections: 18, socks: 0 } },
+    intercept: { enabled: true, pending: 1, auto_skip_static: true, stats: {} },
+    history_count: 7
+  },
+  queue: [{ id: 42, method: "POST", host: "store.example.test", path: "/?edd_action=verify_payment",
+    scheme: "https", tls: true, age: 3.2,
+    raw: "POST /?edd_action=verify_payment HTTP/1.1\r\nHost: store.example.test\r\n" +
+         "Content-Type: application/x-www-form-urlencoded\r\nCookie: edd_session=abc123\r\n" +
+         "User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 27_2 like Mac OS X)\r\n" +
+         "Content-Length: 48\r\n\r\npayment_id=8812&status=complete&amount=49.00" }],
+  history: [
+    { id: 41, method: "POST", host: "store.example.test", tls: 1, path: "/?edd_action=verify_payment", status: 302, length: 0, time_ms: 204, ts: Date.now() / 1000 - 40 },
+    { id: 40, method: "POST", host: "shop.example.test", tls: 1, path: "/wp-admin/admin-ajax.php", status: 200, length: 312, time_ms: 96, ts: Date.now() / 1000 - 62 },
+    { id: 39, method: "GET", host: "192.168.1.42", tls: 0, path: "/files?path=../../../../etc/passwd", status: 200, length: 1821, time_ms: 53, ts: Date.now() / 1000 - 74 },
+    { id: 38, method: "GET", host: "192.168.1.42", tls: 0, path: "/files?path=docs/readme.txt", status: 200, length: 74, time_ms: 41, ts: Date.now() / 1000 - 96 },
+    { id: 37, method: "GET", host: "api.example.test", tls: 1, path: "/v1/user/1234", status: 500, length: 78, time_ms: 812, ts: Date.now() / 1000 - 120 },
+    { id: 36, method: "GET", host: "cdn.example.test", tls: 1, path: "/static/app.bundle.js", status: 304, length: 0, time_ms: 12, ts: Date.now() / 1000 - 140 },
+    { id: 35, method: "GET", host: "shop.example.test", tls: 1, path: "/wp-json/lc/v1/posts", status: 200, length: 4210, time_ms: 133, ts: Date.now() / 1000 - 165 }
+  ],
+  scan: {
+    id: "demo", status: "done", attack: "traversal", attack_label: "Path Traversal / LFI",
+    total: 5, done: 5, baseline: { status: 200, length: 74, time_ms: 41 },
+    results: [
+      { payload: "../../../../etc/passwd", point: "query:path", status: 200, length: 1821, flags: ["length"], reflected: 0 },
+      { payload: "..%2f..%2f..%2f..%2fetc%2fpasswd", point: "query:path", status: 200, length: 1821, flags: ["length"], reflected: 0 },
+      { payload: "....//....//....//etc/passwd", point: "query:path", status: 500, length: 421, flags: ["5xx"], reflected: 0 },
+      { payload: "/etc/passwd", point: "query:path", status: 404, length: 194, flags: ["status-change"], reflected: 0 },
+      { payload: "../../../../package.json", point: "query:path", status: 200, length: 967, flags: ["length"], reflected: 0 }
+    ]
+  },
+  ca: {
+    Subject: "C=IN, O=PocketBurp, OU=Security Research, CN=PocketBurp Root CA",
+    Issuer: "C=IN, O=PocketBurp, OU=Security Research, CN=PocketBurp Root CA",
+    Expires: "Nov  5 09:12:44 2036 GMT",
+    "SHA-256": "7C:4A:1E:93:2B:88:0D:5F:6A:31:C4:E2:19:8B:74:55:0C:2D:AF:61:38:9E:07:4B:D1:86:22:E5:70:9C:A1:3F",
+    Serial: "4F:12:9C:88:AA:01:BE:70",
+    "Leaf validity": "397 days per host"
+  },
+  scope: { raw: "192.168.1.42\n*.example.test\n10.0.0.0/8", enforced: false,
+    entries: ["192.168.1.42", "*.example.test", "10.0.0.0/8"] },
+  repeater: {
+    request: "GET /files?path=docs/readme.txt HTTP/1.1\r\nHost: 192.168.1.42:3000\r\n" +
+      "User-Agent: Mozilla/5.0 (iPhone)\r\nAccept: */*\r\n\r\n",
+    status_line: "HTTP/1.1 200 OK",
+    headers: "Content-Type: text/plain\r\nContent-Length: 74\r\nConnection: close\r\nServer: web-file-server",
+    body: "# Sornaram web file server\nreads files relative to ./public\n"
+  },
+  repSends: [{ id: 1, method: "GET", path: "/files?path=docs/readme.txt", status: 200, time_ms: 41,
+    host: "192.168.1.42", port: 3000, scheme: "http", request: "GET /files?path=docs/readme.txt HTTP/1.1\r\nHost: 192.168.1.42:3000\r\n\r\n" }]
+};
+
+/* --------------------------------------------------------------- PWA */
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  // Not available over plain http on a LAN IP in Safari, harmless to try.
+  navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+}
+
+function isStandalone() {
+  return window.navigator.standalone === true ||
+         window.matchMedia("(display-mode: standalone)").matches ||
+         window.matchMedia("(display-mode: fullscreen)").matches;
+}
+
+/* One-time "Add to Home Screen" hint: iOS Safari only, not if already installed */
+function maybeShowInstallHint() {
+  const el = $("installhint");
+  if (!el) return;
+  const dismissed = (() => { try { return localStorage.getItem("pb_ih") === "1"; } catch (e) { return true; } })();
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isSafari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+  if (dismissed || !isIOS || !isSafari || isStandalone()) return;
+  el.classList.add("show");
+  $("installHintClose").addEventListener("click", () => {
+    el.classList.remove("show");
+    try { localStorage.setItem("pb_ih", "1"); } catch (e) {}
+  });
+}
+
+/* Deep links from the manifest shortcuts: /?tab=intercept */
+function tabFromQuery() {
+  const t = new URLSearchParams(location.search).get("tab");
+  const valid = ["dashboard", "intercept", "history", "repeater", "scanner", "scope", "ca"];
+  return valid.indexOf(t) >= 0 ? t : null;
+}
+
+/* --------------------------------------------------------------- boot */
+(async function boot() {
+  registerServiceWorker();
+  document.documentElement.dataset.display =
+    isStandalone() ? "standalone" : "browser";
+  const wanted = tabFromQuery();
+  if (wanted) showTab(wanted);
+  maybeShowInstallHint();
+  await pollOnce();
+  loadScope();
+  loadCa();
+  loadRepHistory();
+  setInterval(poll, 2000);
+})();
+</script>
+</body>
+</html>

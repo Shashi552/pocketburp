@@ -1,0 +1,113 @@
+name: Build PocketBurp.ipa
+
+# Produces a real, installable PocketBurp.ipa in the cloud -- no local Xcode needed.
+#   1. push this repo to GitHub
+#   2. Actions -> "Build PocketBurp.ipa" -> Run workflow
+#   3. download the "PocketBurp-ipa" artifact, unzip -> PocketBurp.ipa
+#
+# The artifact is UNSIGNED. LiveContainer / TrollStore install it directly;
+# Sideloadly / AltStore / AltServer re-sign it with your own Apple ID.
+#
+# RUNNER: macos-15 (Xcode 16.x, iOS 18 SDK). Do NOT use macos-14 -- GitHub
+# retired that image on 2026-11-02 and jobs targeting it no longer run.
+# macos-latest currently resolves to macos-26; both are fine, macos-15 is pinned
+# here because Xcode 16.4 is the most conservative toolchain for
+# IPHONEOS_DEPLOYMENT_TARGET = 15.0.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          echo "xcode-select: $(xcode-select -p)"
+
+      - name: Sanity-check the project before building
+        run: python3 ipa/tools/check_pbxproj.py -v
+
+      - name: Build .ipa
+        working-directory: ipa
+        run: |
+          chmod +x build-ipa.sh
+          POCKETBURP_ENGINE_DIR="$GITHUB_WORKSPACE" ./build-ipa.sh 2>&1 | tee build-full.log
+
+      - name: Verify the bundle (hard gates)
+        shell: bash
+        run: |
+          set -euo pipefail
+          IPA=ipa/build/PocketBurp.ipa
+          test -f "$IPA" || { echo "::error::no .ipa produced"; exit 1; }
+
+          rm -rf /tmp/verify && mkdir -p /tmp/verify
+          unzip -q "$IPA" -d /tmp/verify
+          APP=/tmp/verify/Payload/PocketBurp.app
+          test -d "$APP" || { echo "::error::Payload/PocketBurp.app missing"; exit 1; }
+
+          # --- files that must exist ---------------------------------------
+          for f in PocketBurp Info.plist \
+                   pocketburp/pocketburp.py \
+                   pocketburp/api.py \
+                   pocketburp/static/index.html \
+                   pocketburp/static/manifest.webmanifest \
+                   pocketburp/static/sw.js; do
+            test -f "$APP/$f" && echo "  PASS  $f" || { echo "::error::missing $f"; exit 1; }
+          done
+
+          COUNT=$(find "$APP/pocketburp" -type f | wc -l | tr -d ' ')
+          echo "  engine files bundled: $COUNT"
+          test "$COUNT" -ge 20 || { echo "::error::engine staging incomplete ($COUNT files)"; exit 1; }
+
+          # --- binary + plist gates ----------------------------------------
+          lipo -info "$APP/PocketBurp" | tee /tmp/lipo.txt
+          grep -q arm64 /tmp/lipo.txt || { echo "::error::binary is not arm64"; exit 1; }
+
+          BID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier"  "$APP/Info.plist")
+          MIN=$(/usr/libexec/PlistBuddy -c "Print :MinimumOSVersion"    "$APP/Info.plist")
+          NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleDisplayName" "$APP/Info.plist")
+          echo "  bundle id : $BID"
+          echo "  min iOS   : $MIN"
+          echo "  name      : $NAME"
+          test "$BID"  = "com.shashank.pocketburp" || { echo "::error::wrong bundle id"; exit 1; }
+          test "$MIN"  = "15.0"                    || { echo "::error::wrong minimum iOS"; exit 1; }
+          test "$NAME" = "PocketBurp"              || { echo "::error::wrong display name"; exit 1; }
+
+          # --- signing state (unsigned is expected here) --------------------
+          if codesign -dv "$APP" 2>&1 | grep -q "Authority="; then
+            codesign -dv "$APP" 2>&1 | grep "Authority=" || true
+          else
+            echo "  PASS  unsigned (expected for CI; LiveContainer/Sideloadly will sign)"
+          fi
+
+          du -h "$IPA"
+          echo "ALL GATES PASSED"
+
+      - name: Keep the build log even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: ipa/build-full.log
+          if-no-files-found: warn
+
+      - name: Upload the .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: PocketBurp-ipa
+          path: ipa/build/PocketBurp.ipa
+          if-no-files-found: error
+          retention-days: 30

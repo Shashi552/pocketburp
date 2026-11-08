@@ -1,0 +1,8 @@
+This folder is populated by build-ipa.sh with the PocketBurp Python engine
+(proxy.py, ca.py, api.py, static/...) and then copied into PocketBurp.app
+as a folder reference.
+
+It exists here so Xcode never chokes on a missing resource when you open the
+project directly. Populate it with:
+
+    cd ipa && ./build-ipa.sh
